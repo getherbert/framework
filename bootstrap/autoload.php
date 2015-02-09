@@ -19,11 +19,6 @@ if (array_search(ABSPATH . 'wp-admin/includes/plugin.php', get_included_files())
 }
 
 /**
- * Register the base autoloader.
- */
-require __DIR__ .'/../vendor/autoload.php';
-
-/**
  * Get Herbert.
  */
 $herbert = Herbert\Framework\Application::getInstance();
