@@ -1,0 +1,19 @@
+{
+  "name": "getherbert/herbert",
+  "description": "Herbert",
+  "license": "MIT",
+  "require": {
+    "twig/twig": "1.16.*",
+    "jeremeamia/superclosure": "~2.0",
+    "illuminate/database": "5.1.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Herbert\\Framework\\": "Herbert/Framework/"
+    }
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "dev"
+}
