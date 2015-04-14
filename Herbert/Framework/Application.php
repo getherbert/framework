@@ -89,13 +89,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     }
 
     /**
-     *  Get the base path
+     *  Added to satisfy interface
      *
-     *  @return mixed
+     *  @return null
      */
     public function basePath()
     {
-        return $plugin->getBasePath();
+        return;
     }
 
     /**
