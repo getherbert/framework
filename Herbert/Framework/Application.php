@@ -89,6 +89,16 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     }
 
     /**
+     *  Added to satisfy interface
+     *
+     *  @return null
+     */
+    public function basePath()
+    {
+        return;
+    }
+
+    /**
      * Get all loaded plugins.
      *
      * @return array
@@ -568,7 +578,7 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
      * @param  array   $parameters
      * @return mixed
      */
-    public function make($abstract, $parameters = array())
+    public function make($abstract, Array $parameters = array())
     {
         $abstract = $this->getAlias($abstract);
 
