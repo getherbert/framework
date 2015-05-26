@@ -24,75 +24,11 @@ class Plugin implements PluginContract {
     protected $container;
 
     /**
-     * @var array
-     */
-    protected $notices = [];
-
-    /**
      * @param $path
      */
     public function __construct($path)
     {
         $this->setBasePath($path);
-
-        add_action('admin_notices', [$this, 'sendNotices']);
-    }
-
-    /**
-     * Adds a notice.
-     *
-     * @param        $message
-     * @param string $class
-     */
-    public function notify($message, $class = 'updated')
-    {
-        $this->notices[] = [
-            'message' => $message,
-            'class'   => $class
-        ];
-    }
-
-    /**
-     * Adds a success notice.
-     *
-     * @param $message
-     */
-    public function notifySuccess($message)
-    {
-        $this->notify($message, 'updated');
-    }
-
-    /**
-     * Adds a warning notice.
-     *
-     * @param $message
-     */
-    public function notifyWarning($message)
-    {
-        $this->notify($message, 'update-nag');
-    }
-
-    /**
-     * Adds an error notice.
-     *
-     * @param $message
-     */
-    public function notifyError($message)
-    {
-        $this->notify($message, 'update-error');
-    }
-
-    /**
-     * Sends all the accumulated notices.
-     *
-     * @return void
-     */
-    public function sendNotices()
-    {
-        foreach ($this->notices as $notice)
-        {
-            echo "<div class=\"{$notice['class']}\"><p>{$notice['message']}</p></div>";
-        }
     }
 
     /**
