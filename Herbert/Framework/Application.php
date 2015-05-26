@@ -292,6 +292,20 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         {
             $plugin->activate();
         }
+
+        if ( ! file_exists($root . '/activate.php'))
+        {
+            return;
+        }
+
+        $this->loadWith("$root/activate.php", [
+            'http',
+            'router',
+            'enqueue',
+            'panel',
+            'shortcode',
+            'widget'
+        ]);
     }
 
     /**
@@ -311,6 +325,39 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         {
             $plugin->deactivate();
         }
+
+        if ( ! file_exists($root . '/deactivate.php'))
+        {
+            return;
+        }
+
+        $this->loadWith("$root/deactivate.php", [
+            'http',
+            'router',
+            'enqueue',
+            'panel',
+            'shortcode',
+            'widget'
+        ]);
+    }
+
+    /**
+     * Loads a file with variables in scope.
+     *
+     * @param  string $file
+     * @param  array  $refs
+     * @return void
+     */
+    protected function loadWith($file, $refs = [])
+    {
+        $container = $this;
+
+        foreach ($refs as $ref)
+        {
+            $$ref = $this[$ref];
+        }
+
+        @require $file;
     }
 
     /**
