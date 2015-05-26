@@ -46,7 +46,7 @@ class Notifier {
      *
      * @param $message
      */
-    protected function notifySuccess($message)
+    protected function success($message)
     {
         $this->notify($message, 'updated');
     }
@@ -56,7 +56,7 @@ class Notifier {
      *
      * @param $message
      */
-    protected function notifyWarning($message)
+    protected function warning($message)
     {
         $this->notify($message, 'update-nag');
     }
@@ -66,7 +66,7 @@ class Notifier {
      *
      * @param $message
      */
-    protected function notifyError($message)
+    protected function error($message)
     {
         $this->notify($message, 'error');
     }
