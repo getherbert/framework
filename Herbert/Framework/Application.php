@@ -83,6 +83,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     protected $plugins = [];
 
     /**
+     * The plugin configurations.
+     *
+     * @var array
+     */
+    protected $configurations = [];
+
+    /**
      * Constructs the application and ensures it's correctly setup.
      */
     public function __construct()
@@ -127,7 +134,12 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
      */
     public function getPluginConfig($root)
     {
-        return @require_once "$root/herbert.config.php" ?: [];
+        if ( ! isset($this->configurations[$root]))
+        {
+            $this->configurations[$root] = @require_once "$root/herbert.config.php" ?: [];
+        }
+
+        return $this->configurations[$root];
     }
 
     /**
@@ -293,19 +305,24 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
             $plugin->activate();
         }
 
-        if ( ! file_exists($root . '/activate.php'))
-        {
-            return;
-        }
+        $config = $this->getPluginConfig($root);
 
-        $this->loadWith("$root/activate.php", [
-            'http',
-            'router',
-            'enqueue',
-            'panel',
-            'shortcode',
-            'widget'
-        ]);
+        foreach (array_get($config, 'activators', []) as $activator)
+        {
+            if ( ! file_exists($activator))
+            {
+                continue;
+            }
+
+            $this->loadWith($activator, [
+                'http',
+                'router',
+                'enqueue',
+                'panel',
+                'shortcode',
+                'widget'
+            ]);
+        }
     }
 
     /**
@@ -326,19 +343,24 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
             $plugin->deactivate();
         }
 
-        if ( ! file_exists($root . '/deactivate.php'))
-        {
-            return;
-        }
+        $config = $this->getPluginConfig($root);
 
-        $this->loadWith("$root/deactivate.php", [
-            'http',
-            'router',
-            'enqueue',
-            'panel',
-            'shortcode',
-            'widget'
-        ]);
+        foreach (array_get($config, 'deactivators', []) as $deactivator)
+        {
+            if ( ! file_exists($deactivator))
+            {
+                continue;
+            }
+
+            $this->loadWith($deactivator, [
+                'http',
+                'router',
+                'enqueue',
+                'panel',
+                'shortcode',
+                'widget'
+            ]);
+        }
     }
 
     /**
