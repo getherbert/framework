@@ -1,6 +1,8 @@
 <?php namespace Herbert\Framework;
 
 use Illuminate\Support\ServiceProvider;
+use vierbergenlars\SemVer\version as SemVersion;
+use vierbergenlars\SemVer\expression as SemVersionExpression;
 
 /**
  * @see http://getherbert.com
@@ -11,6 +13,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
      * The application's version.
      */
     const VERSION = '1.0.0-dev';
+
+    /**
+     * The application's version.
+     *
+     * @var \vierbergenlars\SemVer\version
+     */
+    protected $version;
 
     /**
      * @var \Herbert\Framework\Application
@@ -80,6 +89,8 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     {
         static::$instance = $this;
 
+        $this->version = new SemVersion(self::VERSION);
+
         $this->instance('app', $this);
         $this->instance('Illuminate\Container\Container', $this);
 
@@ -109,14 +120,37 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     }
 
     /**
+     * Gets a plugin's configuration.
+     *
+     * @param  string $root
+     * @return array
+     */
+    public function getPluginConfig($root)
+    {
+        return @require_once "$root/herbert.config.php" ?: [];
+    }
+
+    /**
+     * Checks if a plugin should be loaded.
+     *
+     * @param  array $config
+     * @return bool
+     */
+    public function shouldLoadPlugin($config)
+    {
+        $constraint = array_get($config, 'constraint', self::VERSION);
+
+        return $this->version->satisfies(new SemVersionExpression($constraint));
+    }
+
+    /**
      * Loads a plugin.
      *
-     * @param $root
+     * @param  array $config
+     * @return void
      */
-    public function loadPlugin($root)
+    public function loadPlugin($config)
     {
-        $config = @require_once "$root/herbert.config.php";
-
         $this->loadPluginRequires(
             array_get($config, 'requires', [])
         );

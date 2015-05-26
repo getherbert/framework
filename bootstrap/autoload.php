@@ -30,21 +30,28 @@ $iterator = new DirectoryIterator(ABSPATH . 'wp-content/plugins');
 
 foreach ($iterator as $directory)
 {
-    if (!$directory->valid() || $directory->isDot() || !$directory->isDir())
+    if ( ! $directory->valid() || $directory->isDot() || ! $directory->isDir())
     {
         continue;
     }
 
     $root = $directory->getPath() . '/' . $directory->getFilename();
 
-    if (!file_exists($require = $root . '/herbert.config.php'))
+    if ( ! file_exists($root . '/herbert.config.php'))
     {
         continue;
     }
 
-    register_activation_hook($root . '/plugin.php', function () use ($herbert, $root, $require)
+    $config = $herbert->getPluginConfig($root);
+
+    if ( ! $herbert->shouldLoadPlugin($config))
     {
-        $herbert->loadPlugin($root);
+        continue;
+    }
+
+    register_activation_hook($root . '/plugin.php', function () use ($herbert, $config, $root)
+    {
+        $herbert->loadPlugin($config);
         $herbert->activatePlugin($root);
     });
 
@@ -53,12 +60,12 @@ foreach ($iterator as $directory)
         $herbert->deactivatePlugin($root);
     });
 
-    if (!is_plugin_active(substr($root, strlen(ABSPATH . 'wp-content/plugins/')) . '/plugin.php'))
+    if ( ! is_plugin_active(substr($root, strlen(ABSPATH . 'wp-content/plugins/')) . '/plugin.php'))
     {
         continue;
     }
 
-    $herbert->loadPlugin($root);
+    $herbert->loadPlugin($config);
 }
 
 /**
