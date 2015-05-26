@@ -44,13 +44,14 @@ foreach ($iterator as $directory)
 
     $config = $herbert->getPluginConfig($root);
 
-    if ( ! $herbert->shouldLoadPlugin($config))
-    {
-        continue;
-    }
-
     register_activation_hook($root . '/plugin.php', function () use ($herbert, $config, $root)
     {
+        if ( ! $herbert->pluginMatches($config))
+        {
+            $herbert->pluginMismatched($root);
+        }
+
+        $herbert->pluginMatched($root);
         $herbert->loadPlugin($config);
         $herbert->activatePlugin($root);
     });
@@ -65,6 +66,14 @@ foreach ($iterator as $directory)
         continue;
     }
 
+    if ( ! $herbert->pluginMatches($config))
+    {
+        $herbert->pluginMismatched($root);
+
+        continue;
+    }
+
+    $herbert->pluginMatched($root);
     $herbert->loadPlugin($config);
 }
 

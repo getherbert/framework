@@ -12,7 +12,7 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     /**
      * The application's version.
      */
-    const VERSION = '1.0.0-dev';
+    const VERSION = '1.0.1-dev';
 
     /**
      * The application's version.
@@ -83,6 +83,20 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     protected $plugins = [];
 
     /**
+     * The mismatched plugins.
+     *
+     * @var array
+     */
+    protected $mismatched = [];
+
+    /**
+     * The matched plugins.
+     *
+     * @var array
+     */
+    protected $matched = [];
+
+    /**
      * The plugin configurations.
      *
      * @var array
@@ -143,16 +157,64 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     }
 
     /**
-     * Checks if a plugin should be loaded.
+     * Checks if a plugin version is matches.
      *
      * @param  array $config
      * @return bool
      */
-    public function shouldLoadPlugin($config)
+    public function pluginMatches($config)
     {
         $constraint = array_get($config, 'constraint', self::VERSION);
 
         return $this->version->satisfies(new SemVersionExpression($constraint));
+    }
+
+    /**
+     * Logs a plugin as incompatable.
+     *
+     * @param  string $root
+     * @return void
+     */
+    public function pluginMismatched($root)
+    {
+        $this->mismatched[] = $root;
+    }
+
+    /**
+     * Logs a plugin as compatable.
+     *
+     * @param  string $root
+     * @return void
+     */
+    public function pluginMatched($root)
+    {
+        $this->matched[] = $root;
+    }
+
+    /**
+     * Notifies the user of mismatched plugins.
+     *
+     * @return void
+     */
+    protected function notifyMismatched()
+    {
+        $matched = array_map(function ($value)
+        {
+            return basename($value);
+        }, $this->matched);
+
+        $mismatched = array_map(function ($value)
+        {
+            return basename($value);
+        }, $this->mismatched);
+
+        $message = 'Unfortunately plugin(s) '
+                . implode(', ', $mismatched)
+                . ' can’t work with the following plugin(s) '
+                . implode(', ', $matched)
+                . '. Please disable and try updating all of the above plugins before reactivating.';
+
+        Notifier::error($message);
     }
 
     /**
@@ -737,13 +799,18 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
 
         array_walk($this->plugins, function ($p)
         {
-            if (!method_exists($p, 'boot'))
+            if ( ! method_exists($p, 'boot'))
             {
                 return;
             }
 
             $this->call([$p, 'boot'], ['app' => $this]);
         });
+
+        if (count($this->mismatched) !== 0)
+        {
+            $this->notifyMismatched();
+        }
 
         $this->booted = true;
 
