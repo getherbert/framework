@@ -12,7 +12,7 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     /**
      * The application's version.
      */
-    const VERSION = '1.0.1-dev';
+    const VERSION = '0.9.1';
 
     /**
      * The application's version.
