@@ -5,6 +5,12 @@ use InvalidArgumentException;
 
 /**
  * @see http://getherbert.com
+ *
+ * @method void get()    get(array $parameters)    Adds a get route.
+ * @method void post()   post(array $parameters)   Adds a post route.
+ * @method void put()    put(array $parameters)    Adds a put route.
+ * @method void patch()  patch(array $parameters)  Adds a patch route.
+ * @method void delete() delete(array $parameters) Adds a delete route.
  */
 class Router {
 

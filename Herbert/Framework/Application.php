@@ -1013,14 +1013,21 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
 
             try {
                 $val = $this->call($val, ['app' => $this]);
-            } catch (\Exception $e) { }
-
-            $val = (array) $val;
+            }
+            catch (\Exception $e)
+            {
+                if ((is_numeric($key) || $key === null) && is_string($val))
+                {
+                    continue;
+                }
+            }
 
             if ($key !== null)
             {
                 $val = [$key => $val];
             }
+
+            $val = (array) $val;
 
             $globals = array_merge($globals, $val);
         }

@@ -3,6 +3,7 @@
 use Illuminate\Support\ServiceProvider;
 use Twig_Environment;
 use Twig_Loader_Filesystem;
+use Twig_Extension_Debug;
 
 /**
  * @see http://getherbert.com
@@ -60,6 +61,11 @@ class TwigServiceProvider extends ServiceProvider {
     public function constructTwig()
     {
         $twig = new Twig_Environment($this->app['twig.loader'], $this->app['twig.options']);
+
+        if ($this->app->environment() === 'local')
+        {
+            $twig->addExtension(new Twig_Extension_Debug);
+        }
 
         foreach ($this->app->getViewGlobals() as $key => $value)
         {
