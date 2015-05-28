@@ -4,6 +4,7 @@ use Illuminate\Support\ServiceProvider;
 use Twig_Environment;
 use Twig_Loader_Filesystem;
 use Twig_Extension_Debug;
+use Twig_SimpleFunction;
 
 /**
  * @see http://getherbert.com
@@ -42,6 +43,17 @@ class TwigServiceProvider extends ServiceProvider {
             ];
         });
 
+        $this->app->bind('twig.functions', function ()
+        {
+            return [
+                'dd',
+                'herbert',
+                'view',
+                'panel_url',
+                'route_url'
+            ];
+        });
+
         $this->app->singleton('twig', function ()
         {
             return $this->constructTwig();
@@ -70,6 +82,11 @@ class TwigServiceProvider extends ServiceProvider {
         foreach ($this->app->getViewGlobals() as $key => $value)
         {
             $twig->addGlobal($key, $value);
+        }
+
+        foreach ((array) $this->app['twig.functions'] as $function)
+        {
+            $twig->addFunction(new Twig_SimpleFunction($function, $function));
         }
 
         return $twig;

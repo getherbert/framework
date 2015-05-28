@@ -15,6 +15,38 @@ if ( ! function_exists('dd'))
     }
 }
 
+if ( ! function_exists('response'))
+{
+    /**
+     * Generates a response.
+     *
+     * @param  string  $body
+     * @param  integer $status
+     * @param  array   $headers
+     * @return \Herbert\Framework\Response
+     */
+    function response($body, $status = 200, $headers = null)
+    {
+        return new Herbert\Framework\Response($body, $status, $headers);
+    }
+}
+
+if ( ! function_exists('json_response'))
+{
+    /**
+     * Generates a json response.
+     *
+     * @param  mixed   $jsonable
+     * @param  integer $status
+     * @param  array   $headers
+     * @return \Herbert\Framework\Response
+     */
+    function json_response($jsonable, $status = 200, $headers = null)
+    {
+        return new Herbert\Framework\JsonResponse($jsonable, $status, $headers);
+    }
+}
+
 if ( ! function_exists('herbert'))
 {
     /**
@@ -33,6 +65,21 @@ if ( ! function_exists('herbert'))
         }
 
         return $instance[$binding];
+    }
+}
+
+if ( ! function_exists('view'))
+{
+    /**
+     * Renders a twig view.
+     *
+     * @param  string $name
+     * @param  array  $context
+     * @return string
+     */
+    function view($name, $context = [])
+    {
+        return herbert('Twig_Environment')->render($name, $context);
     }
 }
 
