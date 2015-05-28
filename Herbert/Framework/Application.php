@@ -104,6 +104,27 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     protected $configurations = [];
 
     /**
+     * The view composers.
+     *
+     * @var array
+     */
+    protected $viewComposers = [];
+
+    /**
+     * The view globals.
+     *
+     * @var array
+     */
+    protected $viewGlobals = [];
+
+    /**
+     * The built view globals.
+     *
+     * @var array
+     */
+    protected $builtViewGlobals = null;
+
+    /**
      * Constructs the application and ensures it's correctly setup.
      */
     public function __construct()
@@ -229,19 +250,19 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
             array_get($config, 'requires', [])
         );
 
-        $this->loadPluginX(
+        $this->loadPluginRoutes(
             'router',
             array_get($config, 'routes', [])
+        );
+
+        $this->loadPluginPanels(
+            'panel',
+            array_get($config, 'panels', [])
         );
 
         $this->loadPluginX(
             'enqueue',
             array_get($config, 'enqueue', [])
-        );
-
-        $this->loadPluginX(
-            'panel',
-            array_get($config, 'panels', [])
         );
 
         $this->loadPluginX(
@@ -261,6 +282,14 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         $this->addPluginTwigNamespaces(
             array_get($config, 'views', [])
         );
+
+        $this->addPluginViewGlobals(
+            array_get($config, 'viewGlobals', [])
+        );
+
+        $this->addPluginComposers(
+            array_get($config, 'viewComposers', [])
+        );
     }
 
     /**
@@ -276,6 +305,54 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         foreach ($requires as $require)
         {
             @require_once "$require";
+        }
+    }
+
+    /**
+     * Load all a plugin's routes.
+     *
+     * @param array $routes
+     * @return void
+     */
+    protected function loadPluginRoutes($x, $routes = [])
+    {
+        $container = $this;
+        $router = $this['router'];
+
+        foreach ($routes as $namespace => $requires)
+        {
+            $router->setNamespace($namespace);
+
+            foreach ((array) $requires as $require)
+            {
+                @require_once "$require";
+            }
+
+            $router->unsetNamespace();
+        }
+    }
+
+    /**
+     * Load all a plugin's panels.
+     *
+     * @param array $panels
+     * @return void
+     */
+    protected function loadPluginPanels($x, $panels = [])
+    {
+        $container = $this;
+        $panel = $this['panel'];
+
+        foreach ($panels as $namespace => $requires)
+        {
+            $panel->setNamespace($namespace);
+
+            foreach ((array) $requires as $require)
+            {
+                @require_once "$require";
+            }
+
+            $panel->unsetNamespace();
         }
     }
 
@@ -312,6 +389,41 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
             {
                 $loader->addPath($path, $namespace);
             }
+        }
+    }
+
+    /**
+     * Add all a plugin's view globals.
+     *
+     * @param array $globals
+     * @return void
+     */
+    protected function addPluginViewGlobals($globals = [])
+    {
+        foreach ($globals as $key => $_globals)
+        {
+            if (is_numeric($key))
+            {
+                $key = null;
+            }
+
+            $this->viewGlobals[] = [$key, $_globals];
+        }
+
+        $this->builtViewGlobals = null;
+    }
+
+    /**
+     * Add all a plugin's view composers.
+     *
+     * @param array $composers
+     * @return void
+     */
+    protected function addPluginComposers($composers = [])
+    {
+        foreach ($composers as $match => $_composers)
+        {
+            $this->viewComposers[] = [$match, (array) $_composers];
         }
     }
 
@@ -869,6 +981,94 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         {
             call_user_func($callback, $this);
         }
+    }
+
+    /**
+     * Get all the view globals.
+     *
+     * @return array
+     */
+    public function getViewGlobals()
+    {
+        if ($this->builtViewGlobals === null)
+        {
+            $this->buildViewGlobals();
+        }
+
+        return $this->builtViewGlobals;
+    }
+
+    /**
+     * Builds the view globals.
+     *
+     * @return void
+     */
+    protected function buildViewGlobals()
+    {
+        $globals = [];
+
+        foreach ($this->viewGlobals as $global)
+        {
+            list($key, $val) = $global;
+
+            try {
+                $val = $this->call($val, ['app' => $this]);
+            } catch (\Exception $e) { }
+
+            $val = (array) $val;
+
+            if ($key !== null)
+            {
+                $val = [$key => $val];
+            }
+
+            $globals = array_merge($globals, $val);
+        }
+
+        $this->builtViewGlobals = $globals;
+    }
+
+    /**
+     * Get the view globals.
+     *
+     * @param  string $view
+     * @return array
+     */
+    public function getViewsGlobals($view)
+    {
+        $globals = [];
+
+        foreach ($this->viewComposers as $match => $composers)
+        {
+            if ( ! str_is($match, $view))
+            {
+                continue;
+            }
+
+            foreach ($composers as $composer)
+            {
+                if (is_array($composer))
+                {
+                    $globals = array_merge($globals, $composer);
+
+                    continue;
+                }
+
+                $globals = array_merge((array) $this->call($composer, ['app' => $this, 'view' => $view]));
+            }
+        }
+
+        return $globals;
+    }
+
+    /**
+     * Sets the view globals.
+     *
+     * @param array $globals
+     */
+    public function setViewGlobals($globals)
+    {
+        $this->viewGlobals = $globals;
     }
 
     /**

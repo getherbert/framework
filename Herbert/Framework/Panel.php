@@ -31,6 +31,13 @@ class Panel {
     protected $panels = [];
 
     /**
+     * The current namespace.
+     *
+     * @var string|null
+     */
+    protected $namespace = null;
+
+    /**
      * Adds the WordPress hook during construction.
      *
      * @param \Herbert\Framework\Application $app
@@ -113,6 +120,16 @@ class Panel {
             }
         }
 
+        if (isset($data['as']))
+        {
+            $data['as'] = $this->namespaceAs($data['as']);
+        }
+
+        if (isset($data['parent']))
+        {
+            $data['parent'] = $this->namespaceAs($data['parent']);
+        }
+
         $this->panels[] = $data;
     }
 
@@ -152,6 +169,16 @@ class Panel {
      */
     protected function addSubPanel($panel)
     {
+        foreach ($this->panels as $parent)
+        {
+            if (array_get($parent, 'as') !== $this->namespaceAs($panel['parent']))
+            {
+                continue;
+            }
+
+            $panel['parent'] = $parent['slug'];
+        }
+
         add_submenu_page(
             $panel['parent'],
             $panel['title'],
@@ -230,6 +257,64 @@ class Panel {
 
             return;
         }
+    }
+
+    /**
+     * Get the URL to a panel.
+     *
+     * @param  string $name
+     * @return string
+     */
+    public function url($name)
+    {
+        foreach ($this->panels as $panel)
+        {
+            if (array_get($panel, 'as') !== $name)
+            {
+                continue;
+            }
+
+            return menu_page_url(array_get($panel, 'slug'), false);
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the current namespace.
+     *
+     * @param  string $namespace
+     * @return void
+     */
+    public function setNamespace($namespace)
+    {
+        $this->namespace = $namespace;
+    }
+
+    /**
+     * Unsets the current namespace.
+     *
+     * @return void
+     */
+    public function unsetNamespace()
+    {
+        $this->namespace = null;
+    }
+
+    /**
+     * Namespaces a name.
+     *
+     * @param  string $as
+     * @return string
+     */
+    protected function namespaceAs($as)
+    {
+        if ($this->namespace === null)
+        {
+            return $as;
+        }
+
+        return $this->namespace . '::' . $as;
     }
 
 }

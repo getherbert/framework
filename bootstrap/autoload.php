@@ -10,6 +10,8 @@ if (defined('HERBERT_AUTOLOAD'))
 
 define('HERBERT_AUTOLOAD', microtime(true));
 
+@require 'helpers.php';
+
 /**
  * Load the WP plugin system.
  */

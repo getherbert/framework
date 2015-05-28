@@ -37,8 +37,16 @@ class Router {
         'POST' => [],
         'PUT' => [],
         'PATCH' => [],
-        'DELETE' => []
+        'DELETE' => [],
+        'named' => []
     ];
+
+    /**
+     * The current namespace.
+     *
+     * @var string|null
+     */
+    protected $namespace = null;
 
     /**
      * @var string
@@ -129,7 +137,7 @@ class Router {
      */
     public function add($method, $parameters)
     {
-        if (!in_array($method, static::$methods))
+        if ( ! in_array($method, static::$methods))
         {
             return false;
         }
@@ -149,9 +157,16 @@ class Router {
             throw new InvalidArgumentException("Missing {$key} definition for route");
         }
 
-        $this->routes[$method][] = array_merge($parameters, [
+        $route = array_merge($parameters, [
             'uri' => ltrim($parameters['uri'], '/')
         ]);
+
+        $this->routes[$method][] = $route;
+
+        if (isset($route['as']))
+        {
+            $this->routes['named'][$method . '::' . $this->namespaceAs($route['as'])] = $route;
+        }
 
         return true;
     }
@@ -174,21 +189,36 @@ class Router {
      */
     public function parseRequest($wp)
     {
-        if (!array_key_exists('herbert_route', $wp->query_vars))
+        if ( ! array_key_exists('herbert_route', $wp->query_vars))
         {
             return;
         }
 
         $data = @json_decode($wp->query_vars['herbert_route'], true);
+        $route = null;
 
-        if (!isset($data['id']) || !isset($data['parameters']) || !isset($this->routes[$this->http->method()][$data['id']]))
+        if (isset($data['id']) && isset($this->routes[$this->http->method()][$data['id']]))
+        {
+            $route = $this->routes[$this->http->method()][$data['id']];
+        }
+        elseif (isset($data['name']) && isset($this->routes['named'][$data['name']]))
+        {
+            $route = $this->routes['named'][$data['name']];
+        }
+
+        if ( ! isset($route))
         {
             return;
         }
 
+        if ( ! isset($data['parameters']))
+        {
+            $data['parameters'] = [];
+        }
+
         foreach ($data['parameters'] as $key => $val)
         {
-            if (!isset($wp->query_vars['herbert_param_' . $key]))
+            if ( ! isset($wp->query_vars['herbert_param_' . $key]))
             {
                 return;
             }
@@ -198,7 +228,7 @@ class Router {
 
         $this->processRequest(
             $this->buildRoute(
-                $this->routes[$this->http->method()][$data['id']],
+                $route,
                 $data['parameters']
             )
         );
@@ -236,6 +266,79 @@ class Router {
         }
 
         echo $response->getBody();
+    }
+
+    /**
+     * Get the URL to a route.
+     *
+     * @param  string $name
+     * @param  array  $args
+     * @return string
+     */
+    public function url($name, $args = [])
+    {
+        $route = null;
+        $routes = $this->routes['named'];
+        foreach (self::$methods as $method)
+        {
+            if ( ! isset($routes[$method . '::' . $name]))
+            {
+                continue;
+            }
+
+            $route = $routes[$method . '::' . $name];
+        }
+
+        if ($route === null)
+        {
+            return null;
+        }
+
+        $matches = [];
+        preg_match_all($this->parameterPattern, $uri = $route['uri'], $matches);
+        foreach ($matches[0] as $id => $match)
+        {
+            $uri = preg_replace('/' . preg_quote($match) . '/', array_get($args, $matches[1][$id], $match), $uri, 1);
+        }
+
+        return home_url() . '/' . $uri;
+    }
+
+    /**
+     * Sets the current namespace.
+     *
+     * @param  string $namespace
+     * @return void
+     */
+    public function setNamespace($namespace)
+    {
+        $this->namespace = $namespace;
+    }
+
+    /**
+     * Unsets the current namespace.
+     *
+     * @return void
+     */
+    public function unsetNamespace()
+    {
+        $this->namespace = null;
+    }
+
+    /**
+     * Namespaces a name.
+     *
+     * @param  string $as
+     * @return string
+     */
+    protected function namespaceAs($as)
+    {
+        if ($this->namespace === null)
+        {
+            return $as;
+        }
+
+        return $this->namespace . '::' . $as;
     }
 
     /**

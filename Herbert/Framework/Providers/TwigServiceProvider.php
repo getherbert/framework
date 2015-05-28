@@ -41,12 +41,10 @@ class TwigServiceProvider extends ServiceProvider {
             ];
         });
 
-        $this->app->singleton(
-            'twig', function ()
-            {
-                return $this->constructTwig();
-            }
-        );
+        $this->app->singleton('twig', function ()
+        {
+            return $this->constructTwig();
+        });
 
         $this->app->alias(
             'twig',
@@ -63,7 +61,10 @@ class TwigServiceProvider extends ServiceProvider {
     {
         $twig = new Twig_Environment($this->app['twig.loader'], $this->app['twig.options']);
 
-        // load extensions
+        foreach ($this->app->getViewGlobals() as $key => $value)
+        {
+            $twig->addGlobal($key, $value);
+        }
 
         return $twig;
     }
