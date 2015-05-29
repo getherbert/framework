@@ -15,6 +15,19 @@ if ( ! function_exists('dd'))
     }
 }
 
+if ( ! function_exists('plugin_directory'))
+{
+    /**
+     * Gets the plugin directory.
+     *
+     * @return string
+     */
+    function plugin_directory()
+    {
+        return WP_PLUGIN_DIR;
+    }
+}
+
 if ( ! function_exists('response'))
 {
     /**
