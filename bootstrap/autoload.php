@@ -28,7 +28,7 @@ $herbert = Herbert\Framework\Application::getInstance();
 /**
  * Load all herbert.php files in plugin roots.
  */
-$iterator = new DirectoryIterator(ABSPATH . 'wp-content/plugins');
+$iterator = new DirectoryIterator(ABSPATH . ltrim(substr(plugin_dir_url(''), strlen(home_url())), '/'));
 
 foreach ($iterator as $directory)
 {
