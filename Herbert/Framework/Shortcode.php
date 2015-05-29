@@ -1,5 +1,7 @@
 <?php namespace Herbert\Framework;
 
+use Exception;
+
 /**
  * @see http://getherbert.com
  */
@@ -29,14 +31,33 @@ class Shortcode {
     {
         add_shortcode($name, function ($attributes = [], $content = null) use ($callable, $arguments)
         {
-            if (!is_array($attributes))
+            if ( ! is_array($attributes))
             {
                 $attributes = [];
             }
 
-            if (!empty($arguments))
+            if ( ! empty($arguments))
             {
                 $attributes = $this->renameArguments($arguments, $attributes);
+            }
+
+            if (strpos($callable, '::') !== false)
+            {
+                list($api, $method) = explode('::', $callable);
+
+                global $$api;
+
+                if ($$api === null)
+                {
+                    throw new Exception("API '{$api}' not set!");
+                }
+
+                $callable = $$api->get($method);
+
+                if ($callable === null)
+                {
+                    throw new Exception("Method '{$method}' not set!");
+                }
             }
 
             return $this->app->call(

@@ -8,7 +8,7 @@ class Notifier {
     /**
      * The notifier instance.
      *
-     * @var \Herbet\Framework\Notifier
+     * @var \Herbert\Framework\Notifier
      */
     protected static $instance;
 

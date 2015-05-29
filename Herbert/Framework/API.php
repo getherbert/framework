@@ -1,6 +1,6 @@
 <?php namespace Herbert\Framework;
 
-use WP_Error;
+use Exception;
 
 /**
  * @see http://getherbert.com
@@ -37,6 +37,17 @@ class API {
     }
 
     /**
+     * Gets a method.
+     *
+     * @param  string $method
+     * @return Callable
+     */
+    public function get($method)
+    {
+        return array_get($this->methods, $method);
+    }
+
+    /**
      * Magic call from the function collection.
      *
      * @param $method
@@ -46,9 +57,9 @@ class API {
      */
     public function __call($method, $params)
     {
-        if (!isset($this->methods[$method]))
+        if ( ! isset($this->methods[$method]))
         {
-            throw new WP_Error('broke', "Method '{$method}' not set!");
+            throw new Exception("Method '{$method}' not set!");
         }
 
         return $this->app->call(

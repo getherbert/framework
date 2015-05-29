@@ -60,7 +60,7 @@ class Widget {
     public function add($widget, Plugin $plugin = null)
     {
         $this->widgets[] = [
-            'widget' => $widget,
+            'class'  => $widget,
             'plugin' => $plugin
         ];
     }
