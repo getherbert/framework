@@ -3,9 +3,11 @@
   "description": "Herbert",
   "license": "MIT",
   "require": {
-    "twig/twig": "1.16.*",
-    "illuminate/database": "5.1.*",
-    "vierbergenlars/php-semver": "~3.0"
+    "twig/twig": "~1.16",
+    "illuminate/database": "~5.1",
+    "vierbergenlars/php-semver": "~3.0",
+    "symfony/var-dumper": "~3.0",
+    "illuminate/http": "~5.1"
   },
   "autoload": {
     "psr-4": {

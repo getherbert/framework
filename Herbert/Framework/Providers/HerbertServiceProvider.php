@@ -26,7 +26,7 @@ class HerbertServiceProvider extends ServiceProvider {
 
         $this->app->instance(
             'http',
-            $this->app->make('Herbert\Framework\Http', ['app' => $this->app])
+            \Herbert\Framework\Http::capture()
         );
 
         $this->app->alias(
