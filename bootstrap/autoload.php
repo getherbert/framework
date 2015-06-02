@@ -67,6 +67,10 @@ foreach ($iterator as $directory)
         $herbert->deactivatePlugin($root);
     });
 
+    // Ugly hack to make the install hook work correctly
+    // as WP doesn't allow closures to be passed here
+    register_uninstall_hook($plugin, create_function('', 'herbert()->deletePlugin(\'' . $root . '\');'));
+
     if ( ! is_plugin_active($plugin))
     {
         continue;

@@ -3,6 +3,8 @@
 use Illuminate\Support\ServiceProvider;
 use vierbergenlars\SemVer\version as SemVersion;
 use vierbergenlars\SemVer\expression as SemVersionExpression;
+use Illuminate\Database\Capsule\Manager as CapsuleManager;
+use Illuminate\Database\Schema\Blueprint as SchemaBlueprint;
 
 /**
  * @see http://getherbert.com
@@ -481,6 +483,24 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
 
         $config = $this->getPluginConfig($root);
 
+        foreach (array_get($config, 'tables', []) as $table => $class)
+        {
+            if ( ! class_exists($class))
+            {
+                continue;
+            }
+
+            if (CapsuleManager::schema()->hasTable($table))
+            {
+                continue;
+            }
+
+            CapsuleManager::schema()->create($table, function (SchemaBlueprint $table) use ($class)
+            {
+                $this->call($class . '@activate', ['table' => $table, 'app' => $this]);
+            });
+        }
+
         foreach (array_get($config, 'activators', []) as $activator)
         {
             if ( ! file_exists($activator))
@@ -534,6 +554,85 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
                 'shortcode',
                 'widget'
             ]);
+        }
+
+        foreach (array_get($config, 'tables', []) as $table => $class)
+        {
+            if ( ! class_exists($class))
+            {
+                continue;
+            }
+
+            if ( ! CapsuleManager::schema()->hasTable($table))
+            {
+                continue;
+            }
+
+            CapsuleManager::schema()->table($table, function (SchemaBlueprint $table) use ($class)
+            {
+                $this->call($class . '@deactivate', ['table' => $table, 'app' => $this]);
+            });
+        }
+    }
+
+    /**
+     * Deletes a plugin.
+     *
+     * @see register_uninstall_hook
+     * @param $root
+     */
+    public function deletePlugin($root)
+    {
+        $plugins = array_filter($this->plugins, function (Plugin $plugin) use ($root)
+        {
+            return $plugin->getBasePath() === $root;
+        });
+
+        foreach ($plugins as $plugin)
+        {
+            if ( ! method_exists($plugin, 'delete'))
+            {
+                continue;
+            }
+
+            $plugin->deactivate();
+        }
+
+        $config = $this->getPluginConfig($root);
+
+        foreach (array_get($config, 'deleters', []) as $deleter)
+        {
+            if ( ! file_exists($deleter))
+            {
+                continue;
+            }
+
+            $this->loadWith($deleter, [
+                'http',
+                'router',
+                'enqueue',
+                'panel',
+                'shortcode',
+                'widget'
+            ]);
+        }
+
+        foreach (array_get($config, 'tables', []) as $table => $class)
+        {
+            if ( ! class_exists($class))
+            {
+                continue;
+            }
+
+            if ( ! CapsuleManager::schema()->hasTable($table))
+            {
+                continue;
+            }
+
+            CapsuleManager::schema()->table($table, function (SchemaBlueprint $table) use ($class)
+            {
+                $this->call($class . '@delete', ['table' => $table, 'app' => $this]);
+            });
         }
     }
 
