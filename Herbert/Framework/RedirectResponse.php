@@ -71,9 +71,17 @@ class RedirectResponse extends Response {
      * @param  mixed  $val
      * @return \Herbert\Framework\RedirectResponse
      */
-    public function with($key, $val)
+    public function with($key, $val = null)
     {
-        array_set($this->data, $key, $val);
+        if ( ! is_array($key))
+        {
+            $key = [$key => $val];
+        }
+
+        foreach ($key as $k => $v)
+        {
+            array_set($this->data, $k, $v);
+        }
 
         return $this;
     }
