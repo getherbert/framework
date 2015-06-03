@@ -228,7 +228,7 @@ class Panel {
     protected function makeCallable($panel)
     {
         return function () use ($panel) {
-            $this->handler($panel);
+            return $this->handler($panel);
         };
     }
 
@@ -244,6 +244,11 @@ class Panel {
             $callable,
             ['app' => $this->app]
         );
+
+        if ($response instanceof RedirectResponse)
+        {
+            $response->flash();
+        }
 
         if ($response instanceof Response)
         {
@@ -349,6 +354,8 @@ class Panel {
 
         try {
             $this->call($callable);
+
+            die;
         } catch (HttpErrorException $e) {
             global $wp_query;
             $wp_query->set_404();
