@@ -3,6 +3,7 @@
 use Illuminate\Contracts\Support\Jsonable;
 use InvalidArgumentException;
 use JsonSerializable;
+use Herbert\Framework\Exceptions\HttpErrorException;
 
 /**
  * @see http://getherbert.com
@@ -192,7 +193,7 @@ class Panel {
             $panel['title'],
             'manage_options',
             $panel['slug'],
-            isset($panel['rename']) && $panel['rename'] ? null : $this->makeCallable($panel['uses'])
+            isset($panel['rename']) && $panel['rename'] ? null : $this->makeCallable($panel)
         );
     }
 
@@ -264,6 +265,8 @@ class Panel {
 
             return;
         }
+
+        throw new Exception('Unknown response type!');
     }
 
     /**
@@ -345,7 +348,21 @@ class Panel {
             }
         }
 
-        $this->call($callable);
+        try {
+            $this->call($callable);
+        } catch (HttpErrorException $e) {
+            global $wp_query;
+            $wp_query->set_404();
+
+            status_header($e->getStatus());
+
+            define('HERBERT_HTTP_ERROR_CODE', $e->getStatus());
+            define('HERBERT_HTTP_ERROR_MESSAGE', $e->getMessage());
+
+            Notifier::error('<strong>' . $e->getStatus() . '</strong>: ' . $e->getMessage());
+
+            do_action('admin_notices');
+        }
     }
 
 }

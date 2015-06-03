@@ -2,6 +2,7 @@
 
 use Closure;
 use InvalidArgumentException;
+use Herbert\Framework\Exceptions\HttpErrorException;
 
 /**
  * @see http://getherbert.com
@@ -232,12 +233,24 @@ class Router {
             $data['parameters'][$key] = $wp->query_vars['herbert_param_' . $key];
         }
 
-        $this->processRequest(
-            $this->buildRoute(
-                $route,
-                $data['parameters']
-            )
-        );
+        try {
+            $this->processRequest(
+                $this->buildRoute(
+                    $route,
+                    $data['parameters']
+                )
+            );
+        } catch (HttpErrorException $e) {
+            global $wp_query;
+            $wp_query->set_404();
+
+            status_header($e->getStatus());
+
+            define('HERBERT_HTTP_ERROR_CODE', $e->getStatus());
+            define('HERBERT_HTTP_ERROR_MESSAGE', $e->getMessage());
+
+            @include get_404_template();
+        }
 
         die;
     }
