@@ -26,6 +26,11 @@ class Panel {
     protected $app;
 
     /**
+     * @var \Herbert\Framework\Http
+     */
+    protected $http;
+
+    /**
      * @var array
      */
     protected $panels = [];
@@ -41,10 +46,12 @@ class Panel {
      * Adds the WordPress hook during construction.
      *
      * @param \Herbert\Framework\Application $app
+     * @param \Herbert\Framework\Http        $http
      */
-    public function __construct(Application $app)
+    public function __construct(Application $app, Http $http)
     {
         $this->app = $app;
+        $this->http = $http;
 
         add_action('admin_menu', [$this, 'boot']);
     }
@@ -146,7 +153,7 @@ class Panel {
             $panel['title'],
             'manage_options',
             $panel['slug'],
-            $this->makeCallable($panel['uses']),
+            $this->makeCallable($panel),
             isset($panel['icon']) ? $this->fetchIcon($panel['icon']) : ''
         );
 
@@ -214,13 +221,13 @@ class Panel {
     /**
      * Makes a callable for the panel hook.
      *
-     * @param $callable
+     * @param $panel
      * @return callable
      */
-    protected function makeCallable($callable)
+    protected function makeCallable($panel)
     {
-        return function () use ($callable) {
-            $this->call($callable);
+        return function () use ($panel) {
+            $this->handler($panel);
         };
     }
 
@@ -315,6 +322,32 @@ class Panel {
         }
 
         return $this->namespace . '::' . $as;
+    }
+
+
+    /**
+     * Return the correct callable based on action
+     *
+     * @param $panel
+     * @return void
+     */
+    protected function handler($panel)
+    {
+        $callable = $panel['uses'];
+
+        if($this->http->has('action'))
+        {
+            $action = $this->http->get('action');
+
+            if(isset($panel[$action]))
+            {
+                $callable = $panel[$action];
+            }
+        }
+
+        $this->call($callable);
+
+        return;
     }
 
 }
