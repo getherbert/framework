@@ -210,8 +210,8 @@ class Panel {
             return '';
         }
 
-        if (substr($icon, 0, 9) === "dashicons" || substr($icon, 0, 5) === "data:"
-            || substr($icon, 0, 2) === "//" || $icon == 'none')
+        if (substr($icon, 0, 9) === 'dashicons' || substr($icon, 0, 5) === 'data:'
+            || substr($icon, 0, 2) === '//' || $icon == 'none')
         {
             return $icon;
         }
@@ -337,15 +337,14 @@ class Panel {
     protected function handler($panel)
     {
         $callable = $panel['uses'];
+        $method = $this->http->method();
 
-        if ($this->http->has('action'))
+        $callable = array_get($panel, $method, $callable);
+
+        if ($action = $this->http->get('action'))
         {
-            $action = $this->http->get('action');
-
-            if (isset($panel[$action]))
-            {
-                $callable = $panel[$action];
-            }
+            $callable = array_get($panel, $action, $callable);
+            $callable = array_get($panel, "{$method}.{$action}", $callable);
         }
 
         try {
