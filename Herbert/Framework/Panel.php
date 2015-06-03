@@ -335,19 +335,17 @@ class Panel {
     {
         $callable = $panel['uses'];
 
-        if($this->http->has('action'))
+        if ($this->http->has('action'))
         {
             $action = $this->http->get('action');
 
-            if(isset($panel[$action]))
+            if (isset($panel[$action]))
             {
                 $callable = $panel[$action];
             }
         }
 
         $this->call($callable);
-
-        return;
     }
 
 }
