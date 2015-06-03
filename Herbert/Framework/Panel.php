@@ -337,11 +337,11 @@ class Panel {
     protected function handler($panel)
     {
         $callable = $panel['uses'];
-        $method = $this->http->method();
+        $method = strtolower($this->http->method());
 
         $callable = array_get($panel, $method, $callable);
 
-        if ($action = $this->http->get('action'))
+        if ($action = strtolower($this->http->get('action')))
         {
             $callable = array_get($panel, $action, $callable);
             $callable = array_get($panel, "{$method}.{$action}", $callable);
