@@ -264,6 +264,11 @@ class Router {
     {
         $response = $route->handle();
 
+        if ($response instanceof RedirectResponse)
+        {
+            $response->flash();
+        }
+
         status_header($response->getStatusCode());
 
         foreach ($response->getHeaders() as $key => $value)

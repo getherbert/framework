@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cookie\CookieJar;
+use Herbert\Framework\Session;
 
 /**
  * @see http://getherbert.com
@@ -83,6 +85,16 @@ class HerbertServiceProvider extends ServiceProvider {
             'widget',
             'Herbert\Framework\Widget'
         );
+
+        $this->app->instance(
+            'session',
+            $this->app->make('Herbert\Framework\Session', ['app' => $this->app])
+        );
+
+        $this->app->alias(
+            'session',
+            'Herbert\Framework\Session'
+        );
     }
 
     /**
@@ -109,6 +121,16 @@ class HerbertServiceProvider extends ServiceProvider {
 
         $capsule->setAsGlobal();
         $capsule->bootEloquent();
+    }
+
+    /**
+     * Boots the service provider.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        $this->app['session']->start();
     }
 
 }

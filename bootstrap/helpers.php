@@ -60,6 +60,22 @@ if ( ! function_exists('json_response'))
     }
 }
 
+if ( ! function_exists('redirect_response'))
+{
+    /**
+     * Generates a redirect response.
+     *
+     * @param  string  $url
+     * @param  integer $status
+     * @param  array   $headers
+     * @return \Herbert\Framework\Response
+     */
+    function redirect_response($url, $status = 302, $headers = null)
+    {
+        return new Herbert\Framework\RedirectResponse($url, $status, $headers);
+    }
+}
+
 if ( ! function_exists('herbert'))
 {
     /**
@@ -78,6 +94,46 @@ if ( ! function_exists('herbert'))
         }
 
         return $instance[$binding];
+    }
+}
+
+if ( ! function_exists('session'))
+{
+    /**
+     * Gets the session or a key from the session.
+     *
+     * @param  string $key
+     * @param  mixed  $default
+     * @return \Illuminate\Session\Store|mixed
+     */
+    function session($key = null, $default = null)
+    {
+        if ($key === null)
+        {
+            return herbert('session');
+        }
+
+        return herbert('session')->get($key, $default);
+    }
+}
+
+if ( ! function_exists('session_flashed'))
+{
+    /**
+     * Gets the session flashbag or a key from the session flashbag.
+     *
+     * @param  string $key
+     * @param  mixed  $default
+     * @return \Illuminate\Session\Store|mixed
+     */
+    function session_flashed($key = null, $default = [])
+    {
+        if ($key === null)
+        {
+            return herbert('session')->getFlashBag();
+        }
+
+        return herbert('session')->getFlashBag()->get($key, $default);
     }
 }
 
