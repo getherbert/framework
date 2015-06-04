@@ -158,11 +158,12 @@ if ( ! function_exists('panel_url'))
      * Gets the url to a panel.
      *
      * @param  string $name
+     * @param  array  $query
      * @return string
      */
-    function panel_url($name)
+    function panel_url($name, $query = [])
     {
-        return herbert('panel')->url($name);
+        return esc_url(add_query_arg($query, herbert('panel')->url($name)));
     }
 }
 
@@ -173,10 +174,11 @@ if ( ! function_exists('route_url'))
      *
      * @param  string $name
      * @param  array  $args
+     * @param  array  $query
      * @return string
      */
-    function route_url($name, $args = [])
+    function route_url($name, $args = [], $query = [])
     {
-        return herbert('router')->url($name, $args);
+        return esc_url(add_query_arg($query, herbert('router')->url($name, $args)));
     }
 }

@@ -50,6 +50,8 @@ class RedirectResponse extends Response {
     </head>
     <body>
         Redirecting to <a href="%1$s">%1$s</a>.
+
+        <script>window.location = "%1$s"</script>
     </body>
 </html>', htmlspecialchars($this->target, ENT_QUOTES, 'UTF-8'));
     }

@@ -54,6 +54,7 @@ class Panel {
         $this->app = $app;
         $this->http = $http;
 
+        // add_action('init', [$this, 'bootRoutes']);
         add_action('admin_menu', [$this, 'boot']);
     }
 
@@ -133,7 +134,7 @@ class Panel {
             $data['as'] = $this->namespaceAs($data['as']);
         }
 
-        if (isset($data['parent']))
+        if ($data['type'] === 'sub-panel' && isset($data['parent']))
         {
             $data['parent'] = $this->namespaceAs($data['parent']);
         }
@@ -275,12 +276,12 @@ class Panel {
     }
 
     /**
-     * Get the URL to a panel.
+     * Gets a panel.
      *
      * @param  string $name
-     * @return string
+     * @return array
      */
-    public function url($name)
+    protected function getPanel($name)
     {
         foreach ($this->panels as $panel)
         {
@@ -289,10 +290,33 @@ class Panel {
                 continue;
             }
 
-            return menu_page_url(array_get($panel, 'slug'), false);
+            return $panel;
         }
 
         return null;
+    }
+
+    /**
+     * Get the URL to a panel.
+     *
+     * @param  string $name
+     * @return string
+     */
+    public function url($name)
+    {
+        if (($panel = $this->getPanel($name)) === null)
+        {
+            return null;
+        }
+
+        $slug = array_get($panel, 'slug');
+
+        if (array_get($panel, 'type') === 'wp-sub-panel')
+        {
+            return admin_url(add_query_arg('page', $slug, array_get($panel, 'parent')));
+        }
+
+        return admin_url('admin.php?page=' . $slug);
     }
 
     /**
