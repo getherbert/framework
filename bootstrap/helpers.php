@@ -163,7 +163,7 @@ if ( ! function_exists('panel_url'))
      */
     function panel_url($name, $query = [])
     {
-        return esc_url(add_query_arg($query, herbert('panel')->url($name)));
+        return add_query_arg($query, herbert('panel')->url($name));
     }
 }
 
@@ -179,6 +179,6 @@ if ( ! function_exists('route_url'))
      */
     function route_url($name, $args = [], $query = [])
     {
-        return esc_url(add_query_arg($query, herbert('router')->url($name, $args)));
+        return add_query_arg($query, herbert('router')->url($name, $args));
     }
 }
