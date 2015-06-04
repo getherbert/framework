@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class CommentMeta extends Model {
 
     /**
+     * Disable timestamps.
+     *
+     * @var boolean
+     */
+    public $timestamps = false;
+
+    /**
      * The table associated with the model.
      *
      * @var string
