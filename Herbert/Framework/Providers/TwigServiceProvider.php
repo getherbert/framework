@@ -35,7 +35,7 @@ class TwigServiceProvider extends ServiceProvider {
             return [
                 'debug' => $this->app->environment() === 'local',
                 'charset' => 'utf-8',
-                'cache' => ABSPATH . 'wp-content/twig-cache',
+                'cache' => content_directory() . '/twig-cache',
                 'auto_reload' => true,
                 'strict_variables' => false,
                 'autoescape' => true,
@@ -49,6 +49,8 @@ class TwigServiceProvider extends ServiceProvider {
                 'dd',
                 'herbert',
                 'view',
+                'content_directory',
+                'plugin_directory',
                 'panel_url',
                 'route_url'
             ];

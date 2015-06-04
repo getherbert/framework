@@ -15,6 +15,19 @@ if ( ! function_exists('dd'))
     }
 }
 
+if ( ! function_exists('content_directory'))
+{
+    /**
+     * Gets the content directory.
+     *
+     * @return string
+     */
+    function content_directory()
+    {
+        return WP_CONTENT_DIR;
+    }
+}
+
 if ( ! function_exists('plugin_directory'))
 {
     /**
