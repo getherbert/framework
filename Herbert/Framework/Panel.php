@@ -376,6 +376,11 @@ class Panel {
             $callable = array_get($panel, "{$method}.{$action}", $callable);
         }
 
+        if (is_array($callable))
+        {
+            $callable = $panel['uses'];
+        }
+
         try {
             $this->call($callable);
         } catch (HttpErrorException $e) {
