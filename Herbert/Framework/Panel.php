@@ -255,21 +255,21 @@ class Panel {
         {
             echo $response->getBody();
 
-            return;
+            die;
         }
 
         if (is_null($response) || is_string($response))
         {
             echo $response;
 
-            return;
+            die;
         }
 
         if (is_array($response) || $response instanceof Jsonable || $response instanceof JsonSerializable)
         {
             echo (new JsonResponse($response))->getBody();
 
-            return;
+            die;
         }
 
         throw new Exception('Unknown response type!');
@@ -384,6 +384,14 @@ class Panel {
         try {
             $this->call($callable);
         } catch (HttpErrorException $e) {
+            if ($e->getStatus() === 301 || $e->getStatus() === 302)
+            {
+                $this->call(function () use (&$e)
+                {
+                    return $e->getResponse();
+                });
+            }
+
             global $wp_query;
             $wp_query->set_404();
 

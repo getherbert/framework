@@ -241,6 +241,13 @@ class Router {
                 )
             );
         } catch (HttpErrorException $e) {
+            if ($e->getStatus() === 301 || $e->getStatus() === 302)
+            {
+                $this->processResponse($e->getResponse());
+
+                die;
+            }
+
             global $wp_query;
             $wp_query->set_404();
 
@@ -271,12 +278,21 @@ class Router {
      * Processes a request.
      *
      * @param \Herbert\Framework\Route $route
-     * @return mixed
+     * @return void
      */
     protected function processRequest(Route $route)
     {
-        $response = $route->handle();
+        $this->processResponse($route->handle());
+    }
 
+    /**
+     * Processes a response.
+     *
+     * @param  \Herbert\Framework\Response $response
+     * @return void
+     */
+    protected function processResponse(Response $response)
+    {
         if ($response instanceof RedirectResponse)
         {
             $response->flash();

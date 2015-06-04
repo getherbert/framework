@@ -10,16 +10,28 @@ class HttpErrorException extends \Exception {
     protected $status = 500;
 
     /**
+     * The response.
+     *
+     * @var \Herbert\Framework\Response
+     */
+    protected $response = null;
+
+    /**
      * Constructs the HttpErrorException.
      *
      * @param integer $status
-     * @param string  $message
+     * @param string|mixed  $message
      */
     public function __construct($status = 500, $message = null)
     {
-        parent::__construct($message);
+        parent::__construct(is_string($message) ? $message : null);
 
         $this->status = $status;
+
+        if ( ! is_string($message))
+        {
+            $this->response = $message;
+        }
     }
 
     /**
@@ -30,6 +42,16 @@ class HttpErrorException extends \Exception {
     public function getStatus()
     {
         return $this->status;
+    }
+
+    /**
+     * Gets the response.
+     *
+     * @return mixed
+     */
+    public function getResponse()
+    {
+        return $this->response;
     }
 
 }
