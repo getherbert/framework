@@ -1,18 +1,12 @@
 <?php namespace Herbert\Framework\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * @see http://getherbert.com
  */
 class Post extends Model {
-
-    /**
-     * Disable timestamps.
-     *
-     * @var boolean
-     */
-    public $timestamps = false;
 
     /**
      * The table associated with the model.
@@ -27,6 +21,20 @@ class Post extends Model {
      * @var string
      */
     protected $primaryKey = 'ID';
+
+    /**
+     * The name of the "created at" column.
+     *
+     * @var string
+     */
+    const CREATED_AT = 'post_date';
+
+    /**
+     * The name of the "updated at" column.
+     *
+     * @var string
+     */
+    const UPDATED_AT = 'post_modified';
 
     /**
      * The attributes that are mass assignable.
@@ -95,6 +103,42 @@ class Post extends Model {
     {
         return static::query()
             ->where('post_type', $type);
+    }
+
+    /**
+     * Set the value of the "created at" attribute.
+     *
+     * @param  mixed  $value
+     * @return void
+     */
+    public function setCreatedAt($value)
+    {
+        $this->{static::CREATED_AT} = $value;
+
+        if ( ! $value instanceof Carbon)
+        {
+            $value = new Carbon($value);
+        }
+
+        $this->{static::CREATED_AT . '_gmt'} = $value->timezone('GMT');
+    }
+
+    /**
+     * Set the value of the "updated at" attribute.
+     *
+     * @param  mixed  $value
+     * @return void
+     */
+    public function setUpdatedAt($value)
+    {
+        $this->{static::UPDATED_AT} = $value;
+
+        if ( ! $value instanceof Carbon)
+        {
+            $value = new Carbon($value);
+        }
+
+        $this->{static::UPDATED_AT . '_gmt'} = $value->timezone('GMT');
     }
 
 }

@@ -370,9 +370,13 @@ class Panel {
 
         $callable = array_get($panel, $method, $callable);
 
-        $action = strtolower($this->http->get('action', 'uses'));
-        $callable = array_get($panel, $action, $callable);
-        $callable = array_get($panel, "{$method}.{$action}", $callable);
+        if ($callable === $panel['uses'])
+        {
+            $action = strtolower($this->http->get('action', 'uses'));
+
+            $callable = array_get($panel, $action, $callable);
+            $callable = array_get($panel, "{$method}.{$action}", $callable);
+        }
 
         if (is_array($callable))
         {
