@@ -365,22 +365,25 @@ class Panel {
      */
     protected function handler($panel)
     {
-        $callable = $panel['uses'];
+        $callable = $uses = $panel['uses'];
         $method = strtolower($this->http->method());
+        $action = strtolower($this->http->get('action', 'uses'));
 
         $callable = array_get($panel, $method, $callable);
 
-        if ($callable === $panel['uses'])
+        if ($callable === $uses || is_array($callable))
         {
-            $action = strtolower($this->http->get('action', 'uses'));
-
             $callable = array_get($panel, $action, $callable);
+        }
+
+        if ($callable === $uses || is_array($callable))
+        {
             $callable = array_get($panel, "{$method}.{$action}", $callable);
         }
 
         if (is_array($callable))
         {
-            $callable = $panel['uses'];
+            $callable = $uses;
         }
 
         try {
