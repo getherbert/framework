@@ -99,6 +99,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     protected $matched = [];
 
     /**
+     * The plugin apis.
+     *
+     * @var array
+     */
+    protected $apis = [];
+
+    /**
      * The plugin configurations.
      *
      * @var array
@@ -443,6 +450,7 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         {
             global $$name;
             $api = $$name = new API($this);
+            $this->apis[] = [$name, $api];
 
             require "$require";
         }
@@ -1129,6 +1137,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
             $val = (array) $val;
 
             $globals = array_merge($globals, $val);
+        }
+
+        foreach ($this->apis as $api)
+        {
+            list($name, $instance) = $api;
+
+            $globals[$name] = $instance;
         }
 
         $this->builtViewGlobals = $globals;
