@@ -76,6 +76,21 @@ class SoftDeletingScope extends BaseSoftDeletingScope {
     }
 
     /**
+     * Add the restore extension to the builder.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @return void
+     */
+    protected function addRestore(Builder $builder)
+    {
+        $builder->macro('restore', function (Builder $builder) {
+            $builder->withTrashed();
+
+            return $builder->update([$builder->getModel()->getDeletedAtColumn() => 'publish']);
+        });
+    }
+
+    /**
      * Add the only-trashed extension to the builder.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $builder
