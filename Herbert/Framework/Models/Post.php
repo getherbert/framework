@@ -2,11 +2,14 @@
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Herbert\Framework\Models\SoftDeletes\SoftDeletes;
 
 /**
  * @see http://getherbert.com
  */
 class Post extends Model {
+
+    use SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -35,6 +38,13 @@ class Post extends Model {
      * @var string
      */
     const UPDATED_AT = 'post_modified';
+
+    /**
+     * The name of the "deleted at" column.
+     *
+     * @var string
+     */
+    const DELETED_AT = 'post_status';
 
     /**
      * The attributes that are mass assignable.
