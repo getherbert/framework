@@ -53,7 +53,7 @@ class RedirectResponse extends Response {
 
         <script>window.location = "%1$s"</script>
     </body>
-</html>', htmlspecialchars($this->target, ENT_QUOTES, 'UTF-8'));
+</html>', str_replace('"', '\\"', $this->target));
     }
 
     /**

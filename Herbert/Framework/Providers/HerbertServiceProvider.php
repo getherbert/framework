@@ -95,6 +95,16 @@ class HerbertServiceProvider extends ServiceProvider {
             'session',
             'Herbert\Framework\Session'
         );
+
+        $this->app->instance(
+            'notifier',
+            $this->app->make('Herbert\Framework\Notifier', ['app' => $this->app])
+        );
+
+        $this->app->alias(
+            'notifier',
+            'Herbert\Framework\Notifier'
+        );
     }
 
     /**

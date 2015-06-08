@@ -255,21 +255,21 @@ class Panel {
         {
             echo $response->getBody();
 
-            return;
+            die;
         }
 
         if (is_null($response) || is_string($response))
         {
             echo $response;
 
-            return;
+            die;
         }
 
         if (is_array($response) || $response instanceof Jsonable || $response instanceof JsonSerializable)
         {
             echo (new JsonResponse($response))->getBody();
 
-            return;
+            die;
         }
 
         throw new Exception('Unknown response type!');
@@ -365,25 +365,38 @@ class Panel {
      */
     protected function handler($panel)
     {
-        $callable = $panel['uses'];
+        $callable = $uses = $panel['uses'];
         $method = strtolower($this->http->method());
+        $action = strtolower($this->http->get('action', 'uses'));
 
         $callable = array_get($panel, $method, $callable);
 
-        if ($action = strtolower($this->http->get('action')))
+        if ($callable === $uses || is_array($callable))
         {
             $callable = array_get($panel, $action, $callable);
+        }
+
+        if ($callable === $uses || is_array($callable))
+        {
             $callable = array_get($panel, "{$method}.{$action}", $callable);
         }
 
         if (is_array($callable))
         {
-            $callable = $panel['uses'];
+            $callable = $uses;
         }
 
         try {
             $this->call($callable);
         } catch (HttpErrorException $e) {
+            if ($e->getStatus() === 301 || $e->getStatus() === 302)
+            {
+                $this->call(function () use (&$e)
+                {
+                    return $e->getResponse();
+                });
+            }
+
             global $wp_query;
             $wp_query->set_404();
 
