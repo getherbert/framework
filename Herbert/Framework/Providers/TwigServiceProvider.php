@@ -52,7 +52,9 @@ class TwigServiceProvider extends ServiceProvider {
                 'content_directory',
                 'plugin_directory',
                 'panel_url',
-                'route_url'
+                'route_url',
+                'session',
+                'session_flashed'
             ];
         });
 
