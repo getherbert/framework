@@ -54,8 +54,17 @@ class Panel {
         $this->app = $app;
         $this->http = $http;
 
-        // add_action('init', [$this, 'bootRoutes']);
+        if ( ! is_admin())
+        {
+            return;
+        }
+
         add_action('admin_menu', [$this, 'boot']);
+
+        if ($http->method() !== 'GET')
+        {
+            add_action('init', [$this, 'bootEarly']);
+        }
     }
 
     /**
@@ -81,6 +90,26 @@ class Panel {
                     break;
             }
         }
+    }
+
+    /**
+     * Boots early.
+     *
+     * @return void
+     */
+    public function bootEarly()
+    {
+        if (($slug = $this->http->get('page')) === null)
+        {
+            return;
+        }
+
+        if (($panel = $this->getPanel($slug, true)) === null)
+        {
+            return;
+        }
+
+        $this->handler($panel, true);
     }
 
     /**
@@ -253,6 +282,13 @@ class Panel {
 
         if ($response instanceof Response)
         {
+            status_header($response->getStatusCode());
+
+            foreach ($response->getHeaders() as $key => $value)
+            {
+                @header($key . ': ' . $value);
+            }
+
             echo $response->getBody();
 
             return;
@@ -278,14 +314,17 @@ class Panel {
     /**
      * Gets a panel.
      *
-     * @param  string $name
+     * @param  string  $name
+     * @param  boolean $slug
      * @return array
      */
-    protected function getPanel($name)
+    protected function getPanel($name, $slug = false)
     {
+        $slug = $slug ? 'slug' : 'as';
+
         foreach ($this->panels as $panel)
         {
-            if (array_get($panel, 'as') !== $name)
+            if (array_get($panel, $slug) !== $name)
             {
                 continue;
             }
@@ -360,10 +399,11 @@ class Panel {
     /**
      * Return the correct callable based on action
      *
-     * @param $panel
+     * @param  array   $panel
+     * @param  boolean $strict
      * @return void
      */
-    protected function handler($panel)
+    protected function handler($panel, $strict = false)
     {
         $callable = $uses = $panel['uses'];
         $method = strtolower($this->http->method());
@@ -384,6 +424,11 @@ class Panel {
         if (is_array($callable))
         {
             $callable = $uses;
+        }
+
+        if ($strict && $uses === $callable)
+        {
+            return;
         }
 
         try {
