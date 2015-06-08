@@ -255,21 +255,21 @@ class Panel {
         {
             echo $response->getBody();
 
-            die;
+            return;
         }
 
         if (is_null($response) || is_string($response))
         {
             echo $response;
 
-            die;
+            return;
         }
 
         if (is_array($response) || $response instanceof Jsonable || $response instanceof JsonSerializable)
         {
             echo (new JsonResponse($response))->getBody();
 
-            die;
+            return;
         }
 
         throw new Exception('Unknown response type!');
