@@ -1,5 +1,6 @@
 <?php namespace Herbert\Framework;
 
+use Exception;
 use Illuminate\Contracts\Support\Jsonable;
 use InvalidArgumentException;
 use JsonSerializable;
