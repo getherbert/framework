@@ -153,11 +153,11 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     /**
      *  Added to satisfy interface
      *
-     *  @return null
+     *  @return string
      */
     public function basePath()
     {
-        return;
+        return content_directory() . '/herbert-cache';
     }
 
     /**
@@ -1252,6 +1252,26 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         }
 
         return static::$instance;
+    }
+
+    /**
+     * Get the path to the cached "compiled.php" file.
+     *
+     * @return string
+     */
+    public function getCachedCompilePath()
+    {
+        return $this->basePath() . '/vendor/compiled.php';
+    }
+
+    /**
+     * Get the path to the cached services.json file.
+     *
+     * @return string
+     */
+    public function getCachedServicesPath()
+    {
+        return $this->basePath() . '/vendor/services.json';
     }
 
 }
