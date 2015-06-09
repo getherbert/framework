@@ -14,6 +14,17 @@ class Panel {
     /**
      * @var array
      */
+    protected static $methods = [
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE'
+    ];
+
+    /**
+     * @var array
+     */
     protected static $wpPanels = [
         'index.php', 'edit.php', 'upload.php',
         'link-manager.php', 'edit.php?post_type=*',
@@ -61,6 +72,15 @@ class Panel {
         }
 
         add_action('admin_menu', [$this, 'boot']);
+
+        $http->setMethod($http->get('_method'), $old = $http->method());
+
+        if ( ! in_array($http->method(), self::$methods))
+        {
+            $http->setMethod($old);
+        }
+
+        dd($http->method());
 
         if ($http->method() !== 'GET')
         {
