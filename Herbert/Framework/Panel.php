@@ -110,7 +110,12 @@ class Panel {
             return;
         }
 
-        $this->handler($panel, true);
+        if ( ! $this->handler($panel, true))
+        {
+            return;
+        }
+
+        die;
     }
 
     /**
@@ -429,7 +434,7 @@ class Panel {
 
         if ($strict && $uses === $callable)
         {
-            return;
+            return false;
         }
 
         try {
@@ -455,6 +460,8 @@ class Panel {
 
             do_action('admin_notices');
         }
+
+        return true;
     }
 
 }
