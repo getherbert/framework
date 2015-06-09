@@ -75,7 +75,7 @@ trait SoftDeletes {
      */
     public static function withTrashed()
     {
-        return (new static)->newQueryWithoutScope(new SoftDeletingScope);
+        return (new static)->newQueryWithoutScope(new SoftDeletingScope)->withTrashed();
     }
 
     /**
@@ -89,7 +89,7 @@ trait SoftDeletes {
 
         $column = $instance->getQualifiedDeletedAtColumn();
 
-        return $instance->newQueryWithoutScope(new SoftDeletingScope)->where($column, '!=', 'trash');
+        return $instance->newQueryWithoutScope(new SoftDeletingScope)->onlyTrashed();
     }
 
 }
