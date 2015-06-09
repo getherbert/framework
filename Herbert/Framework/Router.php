@@ -248,15 +248,25 @@ class Router {
                 die;
             }
 
-            global $wp_query;
-            $wp_query->set_404();
+            if ($e->getStatus() === 404)
+            {
+                global $wp_query;
+                $wp_query->set_404();
+            }
 
             status_header($e->getStatus());
 
             define('HERBERT_HTTP_ERROR_CODE', $e->getStatus());
             define('HERBERT_HTTP_ERROR_MESSAGE', $e->getMessage());
 
-            @include get_404_template();
+            if ($e->getStatus() === 404)
+            {
+                @include get_404_template();
+            }
+            else
+            {
+                echo $e->getMessage();
+            }
         }
 
         die;
