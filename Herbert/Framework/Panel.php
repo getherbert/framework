@@ -80,8 +80,6 @@ class Panel {
             $http->setMethod($old);
         }
 
-        dd($http->method());
-
         if ($http->method() !== 'GET')
         {
             add_action('init', [$this, 'bootEarly']);
