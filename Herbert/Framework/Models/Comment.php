@@ -64,7 +64,7 @@ class Comment extends Model {
      */
     public function post()
     {
-        return $this->belongsTo(__NAMESPACE__ . '/Post', 'comment_post_ID');
+        return $this->belongsTo(__NAMESPACE__ . '\Post', 'comment_post_ID');
     }
 
     /**
