@@ -54,7 +54,8 @@ class TwigServiceProvider extends ServiceProvider {
                 'panel_url',
                 'route_url',
                 'session',
-                'session_flashed'
+                'session_flashed',
+                'errors'
             ];
         });
 
