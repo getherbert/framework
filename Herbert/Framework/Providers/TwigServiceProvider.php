@@ -88,7 +88,7 @@ class TwigServiceProvider extends ServiceProvider {
             $twig->addGlobal($key, $value);
         }
 
-        $twig->addGlobal('errors', session()->getFlashBag()->get('__validation_errors', []));
+        $twig->addGlobal('errors', $this->app['errors']);
 
         foreach ((array) $this->app['twig.functions'] as $function)
         {

@@ -110,6 +110,28 @@ if ( ! function_exists('herbert'))
     }
 }
 
+if ( ! function_exists('errors'))
+{
+    /**
+     * Get the errors.
+     *
+     * @param string key
+     * @return array
+     */
+    function errors($key = null)
+    {
+        $errors = herbert('errors');
+        $errors = isset($errors[0]) ? $errors[0] : $errors;
+
+        if (!$key)
+        {
+            return $errors;
+        }
+
+        return array_get($errors, $key);
+    }
+}
+
 if ( ! function_exists('session'))
 {
     /**

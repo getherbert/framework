@@ -105,6 +105,16 @@ class HerbertServiceProvider extends ServiceProvider {
             'notifier',
             'Herbert\Framework\Notifier'
         );
+
+        $this->app->singleton(
+            'errors',
+            function ()
+            {
+                return session_flashed('__validation_errors', []);
+            }
+        );
+
+        $_GLOBALS['errors'] = $this->app['errors'];
     }
 
     /**
