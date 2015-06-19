@@ -84,6 +84,9 @@ foreach ($iterator as $directory)
     }
 
     $herbert->pluginMatched($root);
+
+    @require_once $root.'/plugin.php';
+
     $herbert->loadPlugin($config);
 }
 
