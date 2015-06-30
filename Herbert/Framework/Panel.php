@@ -209,7 +209,8 @@ class Panel {
             'manage_options',
             $panel['slug'],
             $this->makeCallable($panel),
-            isset($panel['icon']) ? $this->fetchIcon($panel['icon']) : ''
+            isset($panel['icon']) ? $this->fetchIcon($panel['icon']) : '',
+            isset($panel['order']) ? $panel['order'] : null
         );
 
         if (isset($panel['rename']) && !empty($panel['rename']))
