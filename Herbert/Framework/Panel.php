@@ -361,6 +361,16 @@ class Panel {
     }
 
     /**
+     * Gets the panels.
+     *
+     * @return array
+     */
+    public function getPanels()
+    {
+        return array_values($this->panels);
+    }
+
+    /**
      * Get the URL to a panel.
      *
      * @param  string $name
@@ -434,16 +444,16 @@ class Panel {
         $method = strtolower($this->http->method());
         $action = strtolower($this->http->get('action', 'uses'));
 
-        $callable = array_get($panel, $method, $callable);
+        $callable = array_get($panel, $method, false) ?: $callable;
 
         if ($callable === $uses || is_array($callable))
         {
-            $callable = array_get($panel, $action, $callable);
+            $callable = array_get($panel, $action, false) ?: $callable;
         }
 
         if ($callable === $uses || is_array($callable))
         {
-            $callable = array_get($panel, "{$method}.{$action}", $callable);
+            $callable = array_get($panel, "{$method}.{$action}", false) ?: $callable;
         }
 
         if (is_array($callable))
