@@ -60,13 +60,48 @@ class Shortcode {
                 }
             }
 
-            return $this->app->call(
+            $response = $this->app->call(
                 $callable,
                 array_merge([
                     '_attributes' => $attributes,
                     '_content'    => $content
                 ], $attributes)
             );
+
+            if ($response instanceof RedirectResponse)
+            {
+                $response->flash();
+            }
+
+            if ($response instanceof Response)
+            {
+                status_header($response->getStatusCode());
+
+                foreach ($response->getHeaders() as $key => $value)
+                {
+                    @header($key . ': ' . $value);
+                }
+
+                echo $response->getBody();
+
+                return;
+            }
+
+            if (is_null($response) || is_string($response))
+            {
+                echo $response;
+
+                return;
+            }
+
+            if (is_array($response) || $response instanceof Jsonable || $response instanceof JsonSerializable)
+            {
+                echo (new JsonResponse($response))->getBody();
+
+                return;
+            }
+
+            throw new Exception('Unknown response type!');
         });
     }
 
