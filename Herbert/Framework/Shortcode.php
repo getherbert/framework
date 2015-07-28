@@ -82,23 +82,17 @@ class Shortcode {
                     @header($key . ': ' . $value);
                 }
 
-                echo $response->getBody();
-
-                return;
+                return $response->getBody();
             }
 
             if (is_null($response) || is_string($response))
             {
-                echo $response;
-
-                return;
+                return $response;
             }
 
             if (is_array($response) || $response instanceof Jsonable || $response instanceof JsonSerializable)
             {
-                echo (new JsonResponse($response))->getBody();
-
-                return;
+                return (new JsonResponse($response))->getBody();
             }
 
             throw new Exception('Unknown response type!');
