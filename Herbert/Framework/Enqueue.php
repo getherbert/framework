@@ -66,13 +66,15 @@ class Enqueue {
 //            $attrs['src'] = ltrim($attrs['src'], '/');
 //        }
 
+        if (!isset($attrs['dep'])) $attrs['dep'] = [];
+
         if (pathinfo($attrs['src'], PATHINFO_EXTENSION) === 'css')
         {
             wp_enqueue_style($attrs['as'], $attrs['src']);
         }
         else
         {
-            wp_enqueue_script($attrs['as'], $attrs['src'], [], false, $footer);
+            wp_enqueue_script($attrs['as'], $attrs['src'], $attrs['dep'], false, $footer);
         }
     }
 
