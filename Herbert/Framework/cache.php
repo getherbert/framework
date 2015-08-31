@@ -1,23 +1,22 @@
 <?php namespace Herbert\Framework;
 
+use Closure;
 /*
  * This is wrapper for WordPress transient functions
  * It uses anonymous functions so 
  * 
  * For Example turn this ugly code:
  *
-    if (false === ( $events = get_transient( $transient ) ) ) {
+    if (false === ( $events = get_transient( 'my-events' ) ) ) {
         $events = Event::all($start,$end);
-        set_transient( $transient, $result );
+        set_transient( 'my-events', $result );
     }
-    return $events;
 
  * Into:
  *
-    $events = Cache::store($transient,function() {
+    $events = Cache::store('my-events',function() {
         return Event::all($start,$end);
     });
-    return $events;
  */
     
 class Cache {
@@ -32,7 +31,8 @@ class Cache {
      *
      * @return mixed - Returns the result of $closure from cache
      */
-    public static function store($key,$closure) {
+    public static function store($key,Closure $closure)
+    {
         if ( self::bypassCache() || false === ( $result = get_transient( $key ) ) ) {
           $result = $closure();
           if (!empty($result)) {
@@ -49,16 +49,18 @@ class Cache {
      *
      * @return mixed - Returns the result of $closure from cache
      */
-    public static function delete($key) {
+    public static function delete($key)
+    {
         return delete_transient($key);
     }
 
     /**
      * Check if the request has PRAGMA header set to no-cache
      *
-     * @return Boolean
+     * @return bool
      */
-    public static function bypassCache() {
+    public static function bypassCache()
+    {
          return (isset($_SERVER['HTTP_PRAGMA']) && $_SERVER['HTTP_PRAGMA'] === 'no-cache');
     }
 }
