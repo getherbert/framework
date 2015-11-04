@@ -20,7 +20,7 @@ class TwigServiceProvider extends ServiceProvider {
     {
         $this->app->singleton('twig.loader', function ()
         {
-            $loader = new Twig_Loader_Filesystem('/');
+            $loader = new Twig_Loader_Filesystem();
 
             foreach ($this->app->getPlugins() as $plugin)
             {
