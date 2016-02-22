@@ -73,6 +73,10 @@ class Enqueue {
         else
         {
             wp_enqueue_script($attrs['as'], $attrs['src'], [], false, $footer);
+
+            if(isset($attrs['localize'])) {
+                wp_localize_script( $attrs['as'], $attrs['as'], $attrs['localize'] );
+            }
         }
     }
 
