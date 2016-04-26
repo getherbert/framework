@@ -94,11 +94,15 @@ class Router {
     public function boot()
     {
         add_rewrite_tag('%herbert_route%', '(.+)');
-
-        foreach ($this->routes[$this->http->method()] as $id => $route)
+        
+        if(is_array($this->routes[$this->http->method()]))
         {
-            $this->addRoute($route, $id, $this->http->method());
+            foreach ($this->routes[$this->http->method()] as $id => $route)
+            {
+                $this->addRoute($route, $id, $this->http->method());
+            } 
         }
+        
     }
 
     /**
