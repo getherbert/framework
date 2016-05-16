@@ -128,16 +128,26 @@ class HerbertServiceProvider extends ServiceProvider {
 
         $capsule = new Capsule($this->app);
 
-        $capsule->addConnection([
-            'driver' => 'mysql',
-            'host' => DB_HOST,
-            'database' => DB_NAME,
-            'username' => DB_USER,
-            'password' => DB_PASSWORD,
-            'charset' => DB_CHARSET,
-            'collation' => DB_COLLATE ?: $wpdb->collate,
-            'prefix' => $wpdb->prefix
-        ]);
+        if (defined('WP_MUFFIN') && WP_MUFFIN) {
+            $capsule->addConnection([
+                'driver'   => 'sqlite',
+                'database' => ':memory:',
+                'charset' => DB_CHARSET,
+                'collation' => DB_COLLATE ?: $wpdb->collate,
+                'prefix'   => $wpdb->prefix
+            ]);
+        } else {
+            $capsule->addConnection([
+                'driver' => 'mysql',
+                'host' => DB_HOST,
+                'database' => DB_NAME,
+                'username' => DB_USER,
+                'password' => DB_PASSWORD,
+                'charset' => DB_CHARSET,
+                'collation' => DB_COLLATE ?: $wpdb->collate,
+                'prefix' => $wpdb->prefix
+            ]);
+        }
 
         $capsule->setAsGlobal();
         $capsule->bootEloquent();
