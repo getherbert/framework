@@ -41,7 +41,7 @@ class Shortcode {
                 $attributes = $this->renameArguments($arguments, $attributes);
             }
 
-            if (strpos($callable, '::') !== false)
+            if (is_string($callable) && strpos($callable, '::') !== false)
             {
                 list($api, $method) = explode('::', $callable);
 
