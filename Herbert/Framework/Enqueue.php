@@ -72,7 +72,13 @@ class Enqueue {
         }
         else
         {
-            wp_enqueue_script($attrs['as'], $attrs['src'], [], false, $footer);
+            wp_register_script( $attrs['as'], $attrs['src'], (array) array_get($attrs, 'dep', []), false, $footer );
+
+            if (isset($attrs['localize'])) {
+                wp_localize_script( $attrs['as'],$attrs['as'], $attrs['localize'] );
+            }
+
+            wp_enqueue_script($attrs['as']);
         }
     }
 
