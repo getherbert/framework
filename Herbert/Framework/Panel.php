@@ -206,7 +206,7 @@ class Panel {
         add_menu_page(
             $panel['title'],
             $panel['title'],
-            'manage_options',
+            isset($panel['capability']) && $panel['capability'] ? $panel['capability'] : 'manage_options',
             $panel['slug'],
             $this->makeCallable($panel),
             isset($panel['icon']) ? $this->fetchIcon($panel['icon']) : '',
@@ -246,7 +246,7 @@ class Panel {
             $panel['parent'],
             $panel['title'],
             $panel['title'],
-            'manage_options',
+            isset($panel['capability']) && $panel['capability'] ? $panel['capability'] : 'manage_options',
             $panel['slug'],
             isset($panel['rename']) && $panel['rename'] ? null : $this->makeCallable($panel)
         );
