@@ -239,10 +239,10 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         }, $this->mismatched);
 
         $message = 'Unfortunately plugin(s) '
-                . implode(', ', $mismatched)
-                . ' can’t work with the following plugin(s) '
-                . implode(', ', $matched)
-                . '. Please disable and try updating all of the above plugins before reactivating.';
+            . implode(', ', $mismatched)
+            . ' can’t work with the following plugin(s) '
+            . implode(', ', $matched)
+            . '. Please disable and try updating all of the above plugins before reactivating.';
 
         Notifier::error($message);
     }
@@ -255,50 +255,52 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
      */
     public function loadPlugin($config)
     {
-        $this->loadPluginRequires(
-            array_get($config, 'requires', [])
-        );
+        add_action('init', function () use ($config) {
+            $this->loadPluginRequires(
+                array_get($config, 'requires', [])
+            );
 
-        $this->loadPluginRoutes(
-            'router',
-            array_get($config, 'routes', [])
-        );
+            $this->loadPluginRoutes(
+                'router',
+                array_get($config, 'routes', [])
+            );
 
-        $this->loadPluginPanels(
-            'panel',
-            array_get($config, 'panels', [])
-        );
+            $this->loadPluginPanels(
+                'panel',
+                array_get($config, 'panels', [])
+            );
 
-        $this->loadPluginX(
-            'enqueue',
-            array_get($config, 'enqueue', [])
-        );
+            $this->loadPluginX(
+                'enqueue',
+                array_get($config, 'enqueue', [])
+            );
 
-        $this->loadPluginX(
-            'shortcode',
-            array_get($config, 'shortcodes', [])
-        );
+            $this->loadPluginX(
+                'shortcode',
+                array_get($config, 'shortcodes', [])
+            );
 
-        $this->loadPluginX(
-            'widget',
-            array_get($config, 'widgets', [])
-        );
+            $this->loadPluginX(
+                'widget',
+                array_get($config, 'widgets', [])
+            );
 
-        $this->loadPluginAPIs(
-            array_get($config, 'apis', [])
-        );
+            $this->loadPluginAPIs(
+                array_get($config, 'apis', [])
+            );
 
-        $this->addPluginTwigNamespaces(
-            array_get($config, 'views', [])
-        );
+            $this->addPluginTwigNamespaces(
+                array_get($config, 'views', [])
+            );
 
-        $this->addPluginViewGlobals(
-            array_get($config, 'viewGlobals', [])
-        );
+            $this->addPluginViewGlobals(
+                array_get($config, 'viewGlobals', [])
+            );
 
-        $this->addPluginComposers(
-            array_get($config, 'viewComposers', [])
-        );
+            $this->addPluginComposers(
+                array_get($config, 'viewComposers', [])
+            );
+        });
     }
 
     /**
