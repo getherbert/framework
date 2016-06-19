@@ -62,10 +62,7 @@ class Shortcode {
 
             $response = $this->app->call(
                 $callable,
-                array_merge([
-                    '_attributes' => $attributes,
-                    '_content'    => $content
-                ], $attributes)
+                $attributes
             );
 
             if ($response instanceof RedirectResponse)
