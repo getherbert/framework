@@ -292,6 +292,8 @@ class Router {
      */
     protected function processRequest(Route $route)
     {
+         // Middleware Implementations
+        (new Middleware())->init($route);
         $this->processResponse($route->handle());
     }
 
