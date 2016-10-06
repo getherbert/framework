@@ -3,6 +3,7 @@ namespace Herbert\Framework;
 
 /**
  * Class Middleware
+ * @package Plugin\library
  */
 class Middleware extends Route
 {
@@ -23,11 +24,12 @@ class Middleware extends Route
      * Init Middleware Handler.
      *
      * @param $http
+     * @return bool
      */
     public function init($http)
     {
         $this->request = $http;
-        $this->handleRequest();
+        return $this->handleRequest();
     }
 
     /**
@@ -35,14 +37,16 @@ class Middleware extends Route
      */
     protected function handleRequest()
     {
+        $request = $this->request;
         if ($this->hasMiddleware()) {
             $middleware = $this->request->middleware;
 
             if (class_exists($middleware)) {
                 $request = new $middleware;
-                $request->handle($this->request);
+                $request = $request->handle($this->request);
             }
         }
+        return $request;
     }
 
 
