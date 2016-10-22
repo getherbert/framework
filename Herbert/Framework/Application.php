@@ -133,6 +133,14 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
      */
     protected $builtViewGlobals = null;
 
+
+    /**
+     * Allow Cross Origin Requests
+     * @boolean allow
+     */
+
+    protected $allow = false;
+
     /**
      * Constructs the application and ensures it's correctly setup.
      */
@@ -298,6 +306,10 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
 
         $this->addPluginComposers(
             array_get($config, 'viewComposers', [])
+        );
+
+        $this->allowCORSDomains(
+            array_get($config, 'CORS',false)
         );
     }
 
@@ -1273,5 +1285,23 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     {
         return $this->basePath() . '/vendor/services.json';
     }
+
+
+    /**
+     * Allow the Http request from different sources(CORS)
+     *
+     */
+
+    public function allowCORSDomains($allow)
+    {
+        if($allow == true){
+
+            add_action('init', 'add_origins');
+            function add_origins(){
+                header("Access-Control-Allow-Origin: *");
+            }
+        }
+    }
+
 
 }
