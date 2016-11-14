@@ -327,7 +327,7 @@ class Enqueue {
      */
     public function filterPostType($attrs, $filterWith)
     {
-        return array_search(get_post_type(), $filterWith) !== null;
+        return array_search(get_post_type(), $filterWith) !== FALSE ? TRUE : FALSE;
     }
 
 }
