@@ -33,6 +33,11 @@ class Route {
      * @var string
      */
     protected $uses;
+    
+    /**
+     * @var string
+     */
+    protected $middleware;
 
     /**
      * @param \Herbert\Framework\Application $app
@@ -46,6 +51,7 @@ class Route {
         $this->uri = $data['uri'];
         $this->name = array_get($data, 'as', $this->uri);
         $this->uses = $data['uses'];
+        $this->middleware = $data['middleware'];
     }
 
     /**
