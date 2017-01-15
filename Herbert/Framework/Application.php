@@ -309,7 +309,7 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         );
 
         $this->allowCORSDomains(
-            array_get($config, 'CORS',false)
+            array_get($config, 'CORS', false ,[])
         );
     }
 
@@ -1292,13 +1292,17 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
      *
      */
 
-    public function allowCORSDomains($allow)
+    public function allowCORSDomains($allow, $domains =[])
     {
         if($allow == true){
 
-            add_action('init', 'add_origins');
-            function add_origins(){
-                header("Access-Control-Allow-Origin: *");
+            $origin  = $_SERVER['HTTP_REFERER'];
+            if(in_array($origin, $domains)){
+
+                add_action('init', 'add_origins');
+                function add_origins(){
+                    header("Access-Control-Allow-Origin: " .$_SERVER['HTTP_ORIGIN']);
+                }
             }
         }
     }
