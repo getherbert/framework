@@ -4,10 +4,10 @@
   "license": "MIT",
   "require": {
     "twig/twig": "~1.16",
-    "illuminate/database": "~5.0",
+    "illuminate/database": "5.4.13",
     "vierbergenlars/php-semver": "~3.0",
     "symfony/var-dumper": "~3.0",
-    "illuminate/http": "~5.0"
+    "illuminate/http": "5.4.13"
   },
   "autoload": {
     "psr-4": {
