@@ -50,7 +50,7 @@ foreach ($iterator as $directory)
     $plugin = substr($root . '/plugin.php', strlen(plugin_directory()));
     $plugin = ltrim($plugin, '/');
 
-    register_activation_hook($plugin, function () use ($herbert, $config, $root)
+    register_activation_hook($plugin, function () use ($herbert, $config, $root, $plugin)
     {
         if ( ! $herbert->pluginMatches($config))
         {
@@ -60,16 +60,17 @@ foreach ($iterator as $directory)
         $herbert->pluginMatched($root);
         $herbert->loadPlugin($config);
         $herbert->activatePlugin($root);
+        
+        // Ugly hack to make the install hook work correctly
+        // as WP doesn't allow closures to be passed here
+        // Makes sure hook is only added when plugin is activated not on every run. 
+        register_uninstall_hook($plugin, create_function('', 'herbert()->deletePlugin(\'' . $root . '\');'));
     });
 
     register_deactivation_hook($plugin, function () use ($herbert, $root)
     {
         $herbert->deactivatePlugin($root);
     });
-
-    // Ugly hack to make the install hook work correctly
-    // as WP doesn't allow closures to be passed here
-    register_uninstall_hook($plugin, create_function('', 'herbert()->deletePlugin(\'' . $root . '\');'));
 
     if ( ! is_plugin_active($plugin))
     {
