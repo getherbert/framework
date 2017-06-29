@@ -11,6 +11,14 @@ use Illuminate\Database\Schema\Blueprint as SchemaBlueprint;
  */
 class Application extends \Illuminate\Container\Container implements \Illuminate\Contracts\Foundation\Application {
 
+    public function getCachedPackagesPath()
+    {
+
+    }
+    public function runningInConsole()
+    {
+
+    }
     /**
      * The application's version.
      */
