@@ -2,6 +2,7 @@
 
 use Closure;
 use InvalidArgumentException;
+use Herbert\Framework\Exceptions\HttpErrorException;
 
 /**
  * @see http://getherbert.com
@@ -93,11 +94,15 @@ class Router {
     public function boot()
     {
         add_rewrite_tag('%herbert_route%', '(.+)');
-
-        foreach ($this->routes[$this->http->method()] as $id => $route)
+        
+        if(is_array($this->routes[$this->http->method()]))
         {
-            $this->addRoute($route, $id, $this->http->method());
+            foreach ($this->routes[$this->http->method()] as $id => $route)
+            {
+                $this->addRoute($route, $id, $this->http->method());
+            } 
         }
+        
     }
 
     /**
@@ -232,12 +237,41 @@ class Router {
             $data['parameters'][$key] = $wp->query_vars['herbert_param_' . $key];
         }
 
-        $this->processRequest(
-            $this->buildRoute(
-                $route,
-                $data['parameters']
-            )
-        );
+        try {
+            $this->processRequest(
+                $this->buildRoute(
+                    $route,
+                    $data['parameters']
+                )
+            );
+        } catch (HttpErrorException $e) {
+            if ($e->getStatus() === 301 || $e->getStatus() === 302)
+            {
+                $this->processResponse($e->getResponse());
+
+                die;
+            }
+
+            if ($e->getStatus() === 404)
+            {
+                global $wp_query;
+                $wp_query->set_404();
+            }
+
+            status_header($e->getStatus());
+
+            define('HERBERT_HTTP_ERROR_CODE', $e->getStatus());
+            define('HERBERT_HTTP_ERROR_MESSAGE', $e->getMessage());
+
+            if ($e->getStatus() === 404)
+            {
+                @include get_404_template();
+            }
+            else
+            {
+                echo $e->getMessage();
+            }
+        }
 
         die;
     }
@@ -258,11 +292,25 @@ class Router {
      * Processes a request.
      *
      * @param \Herbert\Framework\Route $route
-     * @return mixed
+     * @return void
      */
     protected function processRequest(Route $route)
     {
-        $response = $route->handle();
+        $this->processResponse($route->handle());
+    }
+
+    /**
+     * Processes a response.
+     *
+     * @param  \Herbert\Framework\Response $response
+     * @return void
+     */
+    protected function processResponse(Response $response)
+    {
+        if ($response instanceof RedirectResponse)
+        {
+            $response->flash();
+        }
 
         status_header($response->getStatusCode());
 

@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cookie\CookieJar;
+use Herbert\Framework\Session;
 
 /**
  * @see http://getherbert.com
@@ -83,6 +85,36 @@ class HerbertServiceProvider extends ServiceProvider {
             'widget',
             'Herbert\Framework\Widget'
         );
+
+        $this->app->instance(
+            'session',
+            $this->app->make('Herbert\Framework\Session', ['app' => $this->app])
+        );
+
+        $this->app->alias(
+            'session',
+            'Herbert\Framework\Session'
+        );
+
+        $this->app->instance(
+            'notifier',
+            $this->app->make('Herbert\Framework\Notifier', ['app' => $this->app])
+        );
+
+        $this->app->alias(
+            'notifier',
+            'Herbert\Framework\Notifier'
+        );
+
+        $this->app->singleton(
+            'errors',
+            function ()
+            {
+                return session_flashed('__validation_errors', []);
+            }
+        );
+
+        $_GLOBALS['errors'] = $this->app['errors'];
     }
 
     /**
@@ -103,12 +135,22 @@ class HerbertServiceProvider extends ServiceProvider {
             'username' => DB_USER,
             'password' => DB_PASSWORD,
             'charset' => DB_CHARSET,
-            'collation' => 'utf8_unicode_ci',
+            'collation' => DB_COLLATE ?: $wpdb->collate,
             'prefix' => $wpdb->prefix
         ]);
 
         $capsule->setAsGlobal();
         $capsule->bootEloquent();
+    }
+
+    /**
+     * Boots the service provider.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        $this->app['session']->start();
     }
 
 }

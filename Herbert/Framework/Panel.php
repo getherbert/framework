@@ -1,13 +1,26 @@
 <?php namespace Herbert\Framework;
 
+use Exception;
 use Illuminate\Contracts\Support\Jsonable;
 use InvalidArgumentException;
 use JsonSerializable;
+use Herbert\Framework\Exceptions\HttpErrorException;
 
 /**
  * @see http://getherbert.com
  */
 class Panel {
+
+    /**
+     * @var array
+     */
+    protected static $methods = [
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE'
+    ];
 
     /**
      * @var array
@@ -26,6 +39,11 @@ class Panel {
     protected $app;
 
     /**
+     * @var \Herbert\Framework\Http
+     */
+    protected $http;
+
+    /**
      * @var array
      */
     protected $panels = [];
@@ -41,12 +59,31 @@ class Panel {
      * Adds the WordPress hook during construction.
      *
      * @param \Herbert\Framework\Application $app
+     * @param \Herbert\Framework\Http        $http
      */
-    public function __construct(Application $app)
+    public function __construct(Application $app, Http $http)
     {
         $this->app = $app;
+        $this->http = $http;
+
+        if ( ! is_admin())
+        {
+            return;
+        }
 
         add_action('admin_menu', [$this, 'boot']);
+
+        $http->setMethod($http->get('_method'), $old = $http->method());
+
+        if ( ! in_array($http->method(), self::$methods))
+        {
+            $http->setMethod($old);
+        }
+
+        if ($http->method() !== 'GET')
+        {
+            add_action('init', [$this, 'bootEarly']);
+        }
     }
 
     /**
@@ -72,6 +109,31 @@ class Panel {
                     break;
             }
         }
+    }
+
+    /**
+     * Boots early.
+     *
+     * @return void
+     */
+    public function bootEarly()
+    {
+        if (($slug = $this->http->get('page')) === null)
+        {
+            return;
+        }
+
+        if (($panel = $this->getPanel($slug, true)) === null)
+        {
+            return;
+        }
+
+        if ( ! $this->handler($panel, true))
+        {
+            return;
+        }
+
+        die;
     }
 
     /**
@@ -125,7 +187,7 @@ class Panel {
             $data['as'] = $this->namespaceAs($data['as']);
         }
 
-        if (isset($data['parent']))
+        if ($data['type'] === 'sub-panel' && isset($data['parent']))
         {
             $data['parent'] = $this->namespaceAs($data['parent']);
         }
@@ -144,10 +206,11 @@ class Panel {
         add_menu_page(
             $panel['title'],
             $panel['title'],
-            'manage_options',
+            isset($panel['capability']) && $panel['capability'] ? $panel['capability'] : 'manage_options',
             $panel['slug'],
-            $this->makeCallable($panel['uses']),
-            isset($panel['icon']) ? $this->fetchIcon($panel['icon']) : ''
+            $this->makeCallable($panel),
+            isset($panel['icon']) ? $this->fetchIcon($panel['icon']) : '',
+            isset($panel['order']) ? $panel['order'] : null
         );
 
         if (isset($panel['rename']) && !empty($panel['rename']))
@@ -183,9 +246,9 @@ class Panel {
             $panel['parent'],
             $panel['title'],
             $panel['title'],
-            'manage_options',
+            isset($panel['capability']) && $panel['capability'] ? $panel['capability'] : 'manage_options',
             $panel['slug'],
-            isset($panel['rename']) && $panel['rename'] ? null : $this->makeCallable($panel['uses'])
+            isset($panel['rename']) && $panel['rename'] ? null : $this->makeCallable($panel)
         );
     }
 
@@ -202,8 +265,8 @@ class Panel {
             return '';
         }
 
-        if (substr($icon, 0, 9) === "dashicons" || substr($icon, 0, 5) === "data:"
-            || substr($icon, 0, 2) === "//" || $icon == 'none')
+        if (substr($icon, 0, 9) === 'dashicons' || substr($icon, 0, 5) === 'data:'
+            || substr($icon, 0, 2) === '//' || $icon == 'none')
         {
             return $icon;
         }
@@ -214,13 +277,13 @@ class Panel {
     /**
      * Makes a callable for the panel hook.
      *
-     * @param $callable
+     * @param $panel
      * @return callable
      */
-    protected function makeCallable($callable)
+    protected function makeCallable($panel)
     {
-        return function () use ($callable) {
-            $this->call($callable);
+        return function () use ($panel) {
+            return $this->handler($panel);
         };
     }
 
@@ -237,8 +300,20 @@ class Panel {
             ['app' => $this->app]
         );
 
+        if ($response instanceof RedirectResponse)
+        {
+            $response->flash();
+        }
+
         if ($response instanceof Response)
         {
+            status_header($response->getStatusCode());
+
+            foreach ($response->getHeaders() as $key => $value)
+            {
+                @header($key . ': ' . $value);
+            }
+
             echo $response->getBody();
 
             return;
@@ -257,6 +332,42 @@ class Panel {
 
             return;
         }
+
+        throw new Exception('Unknown response type!');
+    }
+
+    /**
+     * Gets a panel.
+     *
+     * @param  string  $name
+     * @param  boolean $slug
+     * @return array
+     */
+    protected function getPanel($name, $slug = false)
+    {
+        $slug = $slug ? 'slug' : 'as';
+
+        foreach ($this->panels as $panel)
+        {
+            if (array_get($panel, $slug) !== $name)
+            {
+                continue;
+            }
+
+            return $panel;
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the panels.
+     *
+     * @return array
+     */
+    public function getPanels()
+    {
+        return array_values($this->panels);
     }
 
     /**
@@ -267,17 +378,19 @@ class Panel {
      */
     public function url($name)
     {
-        foreach ($this->panels as $panel)
+        if (($panel = $this->getPanel($name)) === null)
         {
-            if (array_get($panel, 'as') !== $name)
-            {
-                continue;
-            }
-
-            return menu_page_url(array_get($panel, 'slug'), false);
+            return null;
         }
 
-        return null;
+        $slug = array_get($panel, 'slug');
+
+        if (array_get($panel, 'type') === 'wp-sub-panel')
+        {
+            return admin_url(add_query_arg('page', $slug, array_get($panel, 'parent')));
+        }
+
+        return admin_url('admin.php?page=' . $slug);
     }
 
     /**
@@ -315,6 +428,69 @@ class Panel {
         }
 
         return $this->namespace . '::' . $as;
+    }
+
+
+    /**
+     * Return the correct callable based on action
+     *
+     * @param  array   $panel
+     * @param  boolean $strict
+     * @return void
+     */
+    protected function handler($panel, $strict = false)
+    {
+        $callable = $uses = $panel['uses'];
+        $method = strtolower($this->http->method());
+        $action = strtolower($this->http->get('action', 'uses'));
+
+        $callable = array_get($panel, $method, false) ?: $callable;
+
+        if ($callable === $uses || is_array($callable))
+        {
+            $callable = array_get($panel, $action, false) ?: $callable;
+        }
+
+        if ($callable === $uses || is_array($callable))
+        {
+            $callable = array_get($panel, "{$method}.{$action}", false) ?: $callable;
+        }
+
+        if (is_array($callable))
+        {
+            $callable = $uses;
+        }
+
+        if ($strict && $uses === $callable)
+        {
+            return false;
+        }
+
+        try {
+            $this->call($callable);
+        } catch (HttpErrorException $e) {
+            if ($e->getStatus() === 301 || $e->getStatus() === 302)
+            {
+                $this->call(function () use (&$e)
+                {
+                    return $e->getResponse();
+                });
+            }
+
+            global $wp_query;
+            $wp_query->set_404();
+
+            status_header($e->getStatus());
+
+            define('HERBERT_HTTP_ERROR_CODE', $e->getStatus());
+            define('HERBERT_HTTP_ERROR_MESSAGE', $e->getMessage());
+
+            Notifier::error('<strong>' . $e->getStatus() . '</strong>: ' . $e->getMessage());
+
+            do_action('admin_notices');
+        }
+
+        return true;
     }
 
 }

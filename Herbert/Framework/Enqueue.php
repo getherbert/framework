@@ -73,6 +73,10 @@ class Enqueue {
         else
         {
             wp_enqueue_script($attrs['as'], $attrs['src'], [], false, $footer);
+
+            if(isset($attrs['localize'])) {
+                wp_localize_script( $attrs['as'], $attrs['as'], $attrs['localize'] );
+            }
         }
     }
 
@@ -183,32 +187,23 @@ class Enqueue {
     public function filterPanel($attrs, $filterWith)
     {
         $panels = $this->app['panel']->getPanels();
-        $http = $this->app['http'];
+        $page = $this->app['http']->get('page', false);
 
-        if ($filterWith[0] === '*') {
-            if (!$http->has('page'))
-            {
-                return false;
-            }
-
-            foreach ($panels as $panel)
-            {
-                if ($panel['slug'] === $http->get('page'))
-                {
-                    return true;
-                }
-            }
-        }
-        else
+        if (!$page && function_exists('get_current_screen'))
         {
-            foreach ($filterWith as $filter)
-            {
-                if ($panels[$filter]['slug'] === $http->get('page'))
-                {
-                    return true;
-                }
-            }
+            $page = object_get(get_current_screen(), 'id', $page);
+        }
 
+        foreach ($filterWith as $filter)
+        {
+            $filtered = array_filter($panels, function ($panel) use ($page, $filter) {
+                return $page === $panel['slug'] && str_is($filter, $panel['slug']);
+            });
+
+            if (count($filtered) > 0)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -332,7 +327,7 @@ class Enqueue {
      */
     public function filterPostType($attrs, $filterWith)
     {
-        return array_search(get_post_type(), $filterWith) !== null;
+        return array_search(get_post_type(), $filterWith) !== FALSE;
     }
 
 }

@@ -3,16 +3,26 @@
 use Illuminate\Support\ServiceProvider;
 use vierbergenlars\SemVer\version as SemVersion;
 use vierbergenlars\SemVer\expression as SemVersionExpression;
+use Illuminate\Database\Capsule\Manager as CapsuleManager;
+use Illuminate\Database\Schema\Blueprint as SchemaBlueprint;
 
 /**
  * @see http://getherbert.com
  */
 class Application extends \Illuminate\Container\Container implements \Illuminate\Contracts\Foundation\Application {
 
+    public function getCachedPackagesPath()
+    {
+
+    }
+    public function runningInConsole()
+    {
+
+    }
     /**
      * The application's version.
      */
-    const VERSION = '0.9.2';
+    const VERSION = '0.9.13';
 
     /**
      * The application's version.
@@ -97,6 +107,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     protected $matched = [];
 
     /**
+     * The plugin apis.
+     *
+     * @var array
+     */
+    protected $apis = [];
+
+    /**
      * The plugin configurations.
      *
      * @var array
@@ -144,11 +161,11 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     /**
      *  Added to satisfy interface
      *
-     *  @return null
+     *  @return string
      */
     public function basePath()
     {
-        return;
+        return content_directory() . '/herbert-cache';
     }
 
     /**
@@ -441,6 +458,7 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         {
             global $$name;
             $api = $$name = new API($this);
+            $this->apis[] = [$name, $api];
 
             require "$require";
         }
@@ -480,6 +498,24 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         }
 
         $config = $this->getPluginConfig($root);
+
+        foreach (array_get($config, 'tables', []) as $table => $class)
+        {
+            if ( ! class_exists($class))
+            {
+                continue;
+            }
+
+            if (CapsuleManager::schema()->hasTable($table))
+            {
+                continue;
+            }
+
+            CapsuleManager::schema()->create($table, function (SchemaBlueprint $table) use ($class)
+            {
+                $this->call($class . '@activate', ['table' => $table, 'app' => $this]);
+            });
+        }
 
         foreach (array_get($config, 'activators', []) as $activator)
         {
@@ -534,6 +570,85 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
                 'shortcode',
                 'widget'
             ]);
+        }
+
+        foreach (array_get($config, 'tables', []) as $table => $class)
+        {
+            if ( ! class_exists($class))
+            {
+                continue;
+            }
+
+            if ( ! CapsuleManager::schema()->hasTable($table))
+            {
+                continue;
+            }
+
+            CapsuleManager::schema()->table($table, function (SchemaBlueprint $table) use ($class)
+            {
+                $this->call($class . '@deactivate', ['table' => $table, 'app' => $this]);
+            });
+        }
+    }
+
+    /**
+     * Deletes a plugin.
+     *
+     * @see register_uninstall_hook
+     * @param $root
+     */
+    public function deletePlugin($root)
+    {
+        $plugins = array_filter($this->plugins, function (Plugin $plugin) use ($root)
+        {
+            return $plugin->getBasePath() === $root;
+        });
+
+        foreach ($plugins as $plugin)
+        {
+            if ( ! method_exists($plugin, 'delete'))
+            {
+                continue;
+            }
+
+            $plugin->deactivate();
+        }
+
+        $config = $this->getPluginConfig($root);
+
+        foreach (array_get($config, 'deleters', []) as $deleter)
+        {
+            if ( ! file_exists($deleter))
+            {
+                continue;
+            }
+
+            $this->loadWith($deleter, [
+                'http',
+                'router',
+                'enqueue',
+                'panel',
+                'shortcode',
+                'widget'
+            ]);
+        }
+
+        foreach (array_get($config, 'tables', []) as $table => $class)
+        {
+            if ( ! class_exists($class))
+            {
+                continue;
+            }
+
+            if ( ! CapsuleManager::schema()->hasTable($table))
+            {
+                continue;
+            }
+
+            CapsuleManager::schema()->table($table, function (SchemaBlueprint $table) use ($class)
+            {
+                $this->call($class . '@delete', ['table' => $table, 'app' => $this]);
+            });
         }
     }
 
@@ -1032,6 +1147,13 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
             $globals = array_merge($globals, $val);
         }
 
+        foreach ($this->apis as $api)
+        {
+            list($name, $instance) = $api;
+
+            $globals[$name] = $instance;
+        }
+
         $this->builtViewGlobals = $globals;
     }
 
@@ -1138,6 +1260,26 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         }
 
         return static::$instance;
+    }
+
+    /**
+     * Get the path to the cached "compiled.php" file.
+     *
+     * @return string
+     */
+    public function getCachedCompilePath()
+    {
+        return $this->basePath() . '/vendor/compiled.php';
+    }
+
+    /**
+     * Get the path to the cached services.json file.
+     *
+     * @return string
+     */
+    public function getCachedServicesPath()
+    {
+        return $this->basePath() . '/vendor/services.json';
     }
 
 }

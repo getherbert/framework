@@ -1,6 +1,6 @@
 <?php namespace Herbert\Framework;
 
-use Herbert\Framework\Response;
+use Exception;
 use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
 
@@ -44,7 +44,7 @@ class Route {
         $this->app = $app;
         $this->parameters = $parameters;
         $this->uri = $data['uri'];
-        $this->name = isset($data['as']) ? $data['as'] : $this->uri;
+        $this->name = array_get($data, 'as', $this->uri);
         $this->uses = $data['uses'];
     }
 
@@ -73,7 +73,7 @@ class Route {
             return new JsonResponse($response);
         }
 
-        var_dump($response);
+        throw new Exception('Unknown response type!');
     }
 
     /**
@@ -85,7 +85,7 @@ class Route {
      */
     public function parameter($name, $default = null)
     {
-        if (!isset($this->parameters[$name]))
+        if ( ! isset($this->parameters[$name]))
         {
             return $default;
         }

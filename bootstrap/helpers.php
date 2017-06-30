@@ -15,6 +15,32 @@ if ( ! function_exists('dd'))
     }
 }
 
+if ( ! function_exists('content_directory'))
+{
+    /**
+     * Gets the content directory.
+     *
+     * @return string
+     */
+    function content_directory()
+    {
+        return WP_CONTENT_DIR;
+    }
+}
+
+if ( ! function_exists('plugin_directory'))
+{
+    /**
+     * Gets the plugin directory.
+     *
+     * @return string
+     */
+    function plugin_directory()
+    {
+        return WP_PLUGIN_DIR;
+    }
+}
+
 if ( ! function_exists('response'))
 {
     /**
@@ -47,6 +73,22 @@ if ( ! function_exists('json_response'))
     }
 }
 
+if ( ! function_exists('redirect_response'))
+{
+    /**
+     * Generates a redirect response.
+     *
+     * @param  string  $url
+     * @param  integer $status
+     * @param  array   $headers
+     * @return \Herbert\Framework\Response
+     */
+    function redirect_response($url, $status = 302, $headers = null)
+    {
+        return new Herbert\Framework\RedirectResponse($url, $status, $headers);
+    }
+}
+
 if ( ! function_exists('herbert'))
 {
     /**
@@ -68,6 +110,68 @@ if ( ! function_exists('herbert'))
     }
 }
 
+if ( ! function_exists('errors'))
+{
+    /**
+     * Get the errors.
+     *
+     * @param string key
+     * @return array
+     */
+    function errors($key = null)
+    {
+        $errors = herbert('errors');
+        $errors = isset($errors[0]) ? $errors[0] : $errors;
+
+        if (!$key)
+        {
+            return $errors;
+        }
+
+        return array_get($errors, $key);
+    }
+}
+
+if ( ! function_exists('session'))
+{
+    /**
+     * Gets the session or a key from the session.
+     *
+     * @param  string $key
+     * @param  mixed  $default
+     * @return \Illuminate\Session\Store|mixed
+     */
+    function session($key = null, $default = null)
+    {
+        if ($key === null)
+        {
+            return herbert('session');
+        }
+
+        return herbert('session')->get($key, $default);
+    }
+}
+
+if ( ! function_exists('session_flashed'))
+{
+    /**
+     * Gets the session flashbag or a key from the session flashbag.
+     *
+     * @param  string $key
+     * @param  mixed  $default
+     * @return \Illuminate\Session\Store|mixed
+     */
+    function session_flashed($key = null, $default = [])
+    {
+        if ($key === null)
+        {
+            return herbert('session')->getFlashBag();
+        }
+
+        return herbert('session')->getFlashBag()->get($key, $default);
+    }
+}
+
 if ( ! function_exists('view'))
 {
     /**
@@ -79,7 +183,7 @@ if ( ! function_exists('view'))
      */
     function view($name, $context = [])
     {
-        return herbert('Twig_Environment')->render($name, $context);
+        return response(herbert('Twig_Environment')->render($name, $context));
     }
 }
 
@@ -89,11 +193,12 @@ if ( ! function_exists('panel_url'))
      * Gets the url to a panel.
      *
      * @param  string $name
+     * @param  array  $query
      * @return string
      */
-    function panel_url($name)
+    function panel_url($name, $query = [])
     {
-        return herbert('panel')->url($name);
+        return add_query_arg($query, herbert('panel')->url($name));
     }
 }
 
@@ -104,10 +209,11 @@ if ( ! function_exists('route_url'))
      *
      * @param  string $name
      * @param  array  $args
+     * @param  array  $query
      * @return string
      */
-    function route_url($name, $args = [])
+    function route_url($name, $args = [], $query = [])
     {
-        return herbert('router')->url($name, $args);
+        return add_query_arg($query, herbert('router')->url($name, $args));
     }
 }

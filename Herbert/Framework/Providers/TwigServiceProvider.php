@@ -20,7 +20,7 @@ class TwigServiceProvider extends ServiceProvider {
     {
         $this->app->singleton('twig.loader', function ()
         {
-            $loader = new Twig_Loader_Filesystem('/');
+            $loader = new Twig_Loader_Filesystem();
 
             foreach ($this->app->getPlugins() as $plugin)
             {
@@ -35,7 +35,7 @@ class TwigServiceProvider extends ServiceProvider {
             return [
                 'debug' => $this->app->environment() === 'local',
                 'charset' => 'utf-8',
-                'cache' => ABSPATH . 'wp-content/twig-cache',
+                'cache' => content_directory() . '/twig-cache',
                 'auto_reload' => true,
                 'strict_variables' => false,
                 'autoescape' => true,
@@ -49,8 +49,13 @@ class TwigServiceProvider extends ServiceProvider {
                 'dd',
                 'herbert',
                 'view',
+                'content_directory',
+                'plugin_directory',
                 'panel_url',
-                'route_url'
+                'route_url',
+                'session',
+                'session_flashed',
+                'errors'
             ];
         });
 
@@ -83,6 +88,8 @@ class TwigServiceProvider extends ServiceProvider {
         {
             $twig->addGlobal($key, $value);
         }
+
+        $twig->addGlobal('errors', $this->app['errors']);
 
         foreach ((array) $this->app['twig.functions'] as $function)
         {

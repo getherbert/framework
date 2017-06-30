@@ -28,7 +28,8 @@ $herbert = Herbert\Framework\Application::getInstance();
 /**
  * Load all herbert.php files in plugin roots.
  */
-$iterator = new DirectoryIterator(ABSPATH . 'wp-content/plugins');
+$iterator = new DirectoryIterator(plugin_directory());
+
 
 foreach ($iterator as $directory)
 {
@@ -46,7 +47,10 @@ foreach ($iterator as $directory)
 
     $config = $herbert->getPluginConfig($root);
 
-    register_activation_hook($root . '/plugin.php', function () use ($herbert, $config, $root)
+    $plugin = substr($root . '/plugin.php', strlen(plugin_directory()));
+    $plugin = ltrim($plugin, '/');
+
+    register_activation_hook($plugin, function () use ($herbert, $config, $root)
     {
         if ( ! $herbert->pluginMatches($config))
         {
@@ -58,12 +62,16 @@ foreach ($iterator as $directory)
         $herbert->activatePlugin($root);
     });
 
-    register_deactivation_hook($root . '/plugin.php', function () use ($herbert, $root)
+    register_deactivation_hook($plugin, function () use ($herbert, $root)
     {
         $herbert->deactivatePlugin($root);
     });
 
-    if ( ! is_plugin_active(substr($root, strlen(ABSPATH . 'wp-content/plugins/')) . '/plugin.php'))
+    // Ugly hack to make the install hook work correctly
+    // as WP doesn't allow closures to be passed here
+    register_uninstall_hook($plugin, create_function('', 'herbert()->deletePlugin(\'' . $root . '\');'));
+
+    if ( ! is_plugin_active($plugin))
     {
         continue;
     }
@@ -76,6 +84,9 @@ foreach ($iterator as $directory)
     }
 
     $herbert->pluginMatched($root);
+
+    @require_once $root.'/plugin.php';
+
     $herbert->loadPlugin($config);
 }
 

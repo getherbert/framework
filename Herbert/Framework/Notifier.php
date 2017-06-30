@@ -8,7 +8,7 @@ class Notifier {
     /**
      * The notifier instance.
      *
-     * @var \Herbet\Framework\Notifier
+     * @var \Herbert\Framework\Notifier
      */
     protected static $instance;
 
@@ -24,51 +24,74 @@ class Notifier {
      */
     public function __construct()
     {
+        if ( ! self::$instance)
+        {
+            self::$instance = $this;
+
+            $this->gatherFlashed();
+        }
+
         add_action('admin_notices', [$this, 'sendNotices']);
+        add_action('shutdown', [$this, 'sendNotices']);
     }
 
     /**
      * Adds a notice.
      *
-     * @param        $message
-     * @param string $class
+     * @param string  $message
+     * @param string  $class
+     * @param boolean $flash
      */
-    protected function notify($message, $class = 'updated')
+    protected function notify($message, $class = 'updated', $flash = false)
     {
-        $this->notices[] = [
+        $notification = [
             'message' => $message,
             'class'   => $class
         ];
+
+        if ( ! $flash)
+        {
+            $this->notices[] = $notification;
+
+            return;
+        }
+
+        $notices = session('__notifier_flashed', []);
+        $notices[] = $notification;
+        session()->getFlashBag()->set('__notifier_flashed', $notices);
     }
 
     /**
      * Adds a success notice.
      *
-     * @param $message
+     * @param string  $message
+     * @param boolean $flash
      */
-    protected function success($message)
+    protected function success($message, $flash = false)
     {
-        $this->notify($message, 'updated');
+        $this->notify($message, 'updated', $flash);
     }
 
     /**
      * Adds a warning notice.
      *
-     * @param $message
+     * @param string  $message
+     * @param boolean $flash
      */
-    protected function warning($message)
+    protected function warning($message, $flash = false)
     {
-        $this->notify($message, 'update-nag');
+        $this->notify($message, 'update-nag', $flash);
     }
 
     /**
      * Adds an error notice.
      *
-     * @param $message
+     * @param string  $message
+     * @param boolean $flash
      */
-    protected function error($message)
+    protected function error($message, $flash = false)
     {
-        $this->notify($message, 'error');
+        $this->notify($message, 'error', $flash);
     }
 
     /**
@@ -82,6 +105,18 @@ class Notifier {
         {
             echo "<div class=\"{$notice['class']}\"><p>{$notice['message']}</p></div>";
         }
+
+        $this->notices = [];
+    }
+
+    /**
+     * Gathers all the flashed notify messages.
+     *
+     * @return void
+     */
+    protected function gatherFlashed()
+    {
+        $this->notices = session()->getFlashBag()->get('__notifier_flashed', []);
     }
 
     /**
@@ -95,7 +130,7 @@ class Notifier {
     {
         if ( ! self::$instance)
         {
-            self::$instance = new self;
+            new self;
         }
 
         return call_user_func_array([self::$instance, $name], $arguments);
