@@ -49,38 +49,73 @@ class Enqueue {
         {
             $filterBy = key($attrs['filter']);
             $filterWith = reset($attrs['filter']);
-
-            if (!is_array($filterWith))
-            {
-                $filterWith = [$filterWith];
-            }
-
+            $filterWith = $this->check_array($filterWith);
             if (!$this->filterBy($filterBy, $attrs, $filterWith))
             {
                 return;
             }
+            
+            //subpanel filter
+            $filterWithSub = next($attrs['filter']);
+            $filterWithSub = $this->check_array($filterWithSub);
+            $attrs['enqueue_panel'] = array_key_exists('subPanel', $attrs['filter']) === true ? true : false; // if panel define or not defined
+            if (!$this->filterBy('subpanel', $attrs, $filterWithSub))
+            {
+                return;
+            }
         }
+        
+        $deps = [];
+        if( isset( $attrs['deps'] ) ){
+            $deps = (array)$attrs['deps'];
+        }
+        $ver = false;
+        if( isset( $attrs['ver'] ) ){
+            $ver = (int) $attrs['ver'];
+        }
+        
 
-//        if (substr($attrs['src'], 0, 2) !== "//")
-//        {
-//            $attrs['src'] = ltrim($attrs['src'], '/');
-//        }
-
-        if (pathinfo($attrs['src'], PATHINFO_EXTENSION) === 'css')
+        if ( isset( $attrs['src'] ) && pathinfo($attrs['src'], PATHINFO_EXTENSION) === 'css')
         {
-            wp_enqueue_style($attrs['as'], $attrs['src']);
+            wp_enqueue_style($attrs['as'], $attrs['src'], $deps, $ver);
+        }
+        else if( isset( $attrs['lc'] ) && !empty($attrs['lc']) ){
+            wp_localize_script( $attrs['as'], $attrs['name'], $this->get_additional_data($attrs['data']) );
         }
         else
         {
-            wp_enqueue_script($attrs['as'], $attrs['src'], [], false, $footer);
-
-            if(isset($attrs['localize'])) {
-                wp_localize_script( $attrs['as'], $attrs['as'], $attrs['localize'] );
-            }
+            wp_enqueue_script($attrs['as'], $attrs['src'], $deps, $ver, $footer);
         }
+    }
+    
+    /**
+     * Get additional Constant data
+     * 
+     * @param type $data
+     * @return type
+     */
+    private function get_additional_data( $data ){
+        $page = $this->app['http']->get('page', false); 
+        return array_merge(array(
+            'base_url' => admin_url( "admin.php?page={$page}" )
+        ), $data);
     }
 
     /**
+     * Check Data is is array
+     * 
+     * @param type $data
+     * @return array
+     */
+    private function check_array( $filterWith ){
+        if (!is_array($filterWith))
+        {
+            return [$filterWith];
+        }
+        else return $filterWith;
+    }
+
+        /**
      * Filters by a specific filter.
      *
      * @param $by
@@ -188,7 +223,6 @@ class Enqueue {
     {
         $panels = $this->app['panel']->getPanels();
         $page = $this->app['http']->get('page', false);
-
         if (!$page && function_exists('get_current_screen'))
         {
             $page = object_get(get_current_screen(), 'id', $page);
@@ -206,6 +240,38 @@ class Enqueue {
             }
         }
 
+        return false;
+    }
+    
+    /**
+     * Filter Subpanel. Subpanel slug should be 'tab=subpanel'
+     * 
+     * @param type $attrs
+     * @param type $filterWith
+     * @return boolean
+     */
+    public function filterSubpanel($attrs, $filterWith){
+        $tab = $this->app['http']->get('tab', false); 
+//        foreach ($filterWith as $filter) {
+//            if( str_is( $filter, $tab ) ){
+//                return true;
+//            }
+//        }
+        //check all *
+        $getFirstTab = trim($filterWith[0]);
+        if(str_is( $getFirstTab, '*')){
+            return true;
+        }
+        
+        if(in_array($tab, $filterWith, true)){
+            return true;
+        }
+        
+        // page has no subpanel but script enqueued
+        if( empty( $tab) && $attrs['enqueue_panel'] === true){
+            return true;
+        }
+        
         return false;
     }
 
@@ -327,7 +393,7 @@ class Enqueue {
      */
     public function filterPostType($attrs, $filterWith)
     {
-        return array_search(get_post_type(), $filterWith) !== FALSE;
+        return array_search(get_post_type(), $filterWith) !== null;
     }
 
 }
