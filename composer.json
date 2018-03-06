@@ -3,7 +3,6 @@
   "description": "Herbert",
   "license": "MIT",
   "require": {
-    "twig/twig": "~1.16",
     "illuminate/database": "~5.0",
     "vierbergenlars/php-semver": "~3.0",
     "symfony/var-dumper": "~3.0",
