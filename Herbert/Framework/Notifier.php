@@ -1,4 +1,5 @@
-<?php namespace Herbert\Framework;
+<?php 
+namespace Herbert\Framework;
 
 /**
  * @see http://getherbert.com
