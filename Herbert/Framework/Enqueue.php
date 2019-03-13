@@ -3,7 +3,8 @@
 /**
  * @see http://getherbert.com
  */
-class Enqueue {
+class Enqueue
+{
 
     /**
      * All the filters.
@@ -18,7 +19,8 @@ class Enqueue {
         'category',
         'archive',
         'search',
-        'postType'
+        'postType',
+        'taxonomy'
     ];
 
     /**
@@ -45,18 +47,14 @@ class Enqueue {
      */
     public function buildInclude($attrs, $footer)
     {
-        if (isset($attrs['filter']) && !empty($attrs['filter']))
-        {
+        if (isset($attrs['filter']) && !empty($attrs['filter'])) {
             $filterBy = key($attrs['filter']);
             $filterWith = reset($attrs['filter']);
 
-            if (!is_array($filterWith))
-            {
+            if (!is_array($filterWith)) {
                 $filterWith = [$filterWith];
             }
-
-            if (!$this->filterBy($filterBy, $attrs, $filterWith))
-            {
+            if (!$this->filterBy($filterBy, $attrs, $filterWith)) {
                 return;
             }
         }
@@ -66,16 +64,13 @@ class Enqueue {
 //            $attrs['src'] = ltrim($attrs['src'], '/');
 //        }
 
-        if (pathinfo($attrs['src'], PATHINFO_EXTENSION) === 'css')
-        {
+        if (pathinfo($attrs['src'], PATHINFO_EXTENSION) === 'css') {
             wp_enqueue_style($attrs['as'], $attrs['src']);
-        }
-        else
-        {
+        } else {
             wp_enqueue_script($attrs['as'], $attrs['src'], [], false, $footer);
 
-            if(isset($attrs['localize'])) {
-                wp_localize_script( $attrs['as'], $attrs['as'], $attrs['localize'] );
+            if (isset($attrs['localize'])) {
+                wp_localize_script($attrs['as'], $attrs['as'], $attrs['localize']);
             }
         }
     }
@@ -92,8 +87,7 @@ class Enqueue {
     {
         $method = 'filter' . ucfirst($by);
 
-        if (!method_exists($this, $method))
-        {
+        if (!method_exists($this, $method)) {
             return false;
         }
 
@@ -108,8 +102,7 @@ class Enqueue {
      */
     public function admin($attrs, $footer = 'header')
     {
-        add_action('admin_enqueue_scripts', function ($hook) use ($attrs, $footer)
-        {
+        add_action('admin_enqueue_scripts', function ($hook) use ($attrs, $footer) {
             $attrs['hook'] = $hook;
             $this->buildInclude($attrs, $this->setFooterFlag($footer));
         });
@@ -123,8 +116,7 @@ class Enqueue {
      */
     public function login($attrs, $footer = 'header')
     {
-        add_action('login_enqueue_scripts', function () use ($attrs, $footer)
-        {
+        add_action('login_enqueue_scripts', function () use ($attrs, $footer) {
             $this->buildInclude($attrs, $this->setFooterFlag($footer));
         });
     }
@@ -137,8 +129,7 @@ class Enqueue {
      */
     public function front($attrs, $footer = 'header')
     {
-        add_action('wp_enqueue_scripts', function () use ($attrs, $footer)
-        {
+        add_action('wp_enqueue_scripts', function () use ($attrs, $footer) {
             $this->buildInclude($attrs, $this->setFooterFlag($footer));
         });
     }
@@ -167,8 +158,7 @@ class Enqueue {
     {
         $hook = $attrs['hook'];
 
-        if ($filterWith[0] === '*')
-        {
+        if ($filterWith[0] === '*') {
             return true;
         }
 
@@ -186,22 +176,20 @@ class Enqueue {
      */
     public function filterPanel($attrs, $filterWith)
     {
+
         $panels = $this->app['panel']->getPanels();
         $page = $this->app['http']->get('page', false);
 
-        if (!$page && function_exists('get_current_screen'))
-        {
+        if (!$page && function_exists('get_current_screen')) {
             $page = object_get(get_current_screen(), 'id', $page);
         }
 
-        foreach ($filterWith as $filter)
-        {
+        foreach ($filterWith as $filter) {
             $filtered = array_filter($panels, function ($panel) use ($page, $filter) {
                 return $page === $panel['slug'] && str_is($filter, $panel['slug']);
             });
 
-            if (count($filtered) > 0)
-            {
+            if (count($filtered) > 0) {
                 return true;
             }
         }
@@ -220,15 +208,12 @@ class Enqueue {
      */
     public function filterPage($attrs, $filterWith)
     {
-        if ($filterWith[0] === '*' && is_page())
-        {
+        if ($filterWith[0] === '*' && is_page()) {
             return true;
         }
 
-        foreach ($filterWith as $filter)
-        {
-            if (is_page($filter))
-            {
+        foreach ($filterWith as $filter) {
+            if (is_page($filter)) {
                 return true;
             }
         }
@@ -247,15 +232,12 @@ class Enqueue {
      */
     public function filterPost($attrs, $filterWith)
     {
-        if ($filterWith[0] === '*' && is_single())
-        {
+        if ($filterWith[0] === '*' && is_single()) {
             return true;
         }
 
-        foreach ($filterWith as $filter)
-        {
-            if (is_single($filter))
-            {
+        foreach ($filterWith as $filter) {
+            if (is_single($filter)) {
                 return true;
             }
         }
@@ -274,15 +256,12 @@ class Enqueue {
      */
     public function filterCategory($attrs, $filterWith)
     {
-        if ($filterWith[0] === '*' && is_category())
-        {
+        if ($filterWith[0] === '*' && is_category()) {
             return true;
         }
 
-        foreach ($filterWith as $filter)
-        {
-            if (is_category($filter))
-            {
+        foreach ($filterWith as $filter) {
+            if (is_category($filter)) {
                 return true;
             }
         }
@@ -328,6 +307,23 @@ class Enqueue {
     public function filterPostType($attrs, $filterWith)
     {
         return array_search(get_post_type(), $filterWith) !== FALSE;
+    }
+
+    /**
+     * Filter by Taxonomy, check all values using
+     *
+     * @param $attrs
+     * @param $filterWith
+     * @return bool
+     */
+    public function filterTaxonomy($attrs, $filterWith)
+    {
+        /* @var \Herbert\Framework\Http $http */
+        $http = $this->app->get('http');
+        if ($http->has('taxonomy')) {
+            return array_search( $http->get('taxonomy') , $filterWith) !== FALSE;
+        }
+        return false;
     }
 
 }
