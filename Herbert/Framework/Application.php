@@ -151,7 +151,8 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
     }
     
     public function runningInConsole() { }
-    
+    public function runningUnitTests() { }
+
     public function getCachedPackagesPath() { }
     
     /**
