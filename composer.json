@@ -1,13 +1,13 @@
 {
-  "name": "getherbert/herbert",
+  "name": "imajim/herbert",
   "description": "Herbert",
   "license": "MIT",
   "require": {
-    "twig/twig": "~1.16",
     "illuminate/database": "~5.0",
     "vierbergenlars/php-semver": "~3.0",
     "symfony/var-dumper": "~3.0",
-    "illuminate/http": "~5.0"
+    "illuminate/http": "~5.0",
+    "twig/twig": "2.x-dev"
   },
   "autoload": {
     "psr-4": {

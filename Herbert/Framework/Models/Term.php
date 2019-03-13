@@ -46,5 +46,15 @@ class Term extends Model {
     {
         return $this->hasMany(__NAMESPACE__ . '\Taxonomy', 'term_id');
     }
+    
+    /**
+     * TermMeta relationship.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function meta()
+    {
+        return $this->hasMany(__NAMESPACE__ . '\TermMeta', 'term_id');
+    }
 
 }

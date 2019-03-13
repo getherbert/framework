@@ -149,7 +149,12 @@ class Application extends \Illuminate\Container\Container implements \Illuminate
         $this->registerCoreContainerAliases();
         $this->registerConfiguredProviders();
     }
+    
+    public function runningInConsole() { }
+    public function runningUnitTests() { }
 
+    public function getCachedPackagesPath() { }
+    
     /**
      *  Added to satisfy interface
      *
